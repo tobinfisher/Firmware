@@ -753,6 +753,8 @@ void handle_command(int status_pub, struct vehicle_status_s *current_vehicle_sta
 
 	/* announce command handling */
 	tune_confirm();
+    
+     //mavlink_log_info(mavlink_fd, "Got message to handle a command");
 
 
 	/* supported command handling start */
@@ -762,14 +764,19 @@ void handle_command(int status_pub, struct vehicle_status_s *current_vehicle_sta
 	case VEHICLE_CMD_DO_SET_MODE: {
 			if (OK == update_state_machine_mode_request(status_pub, current_vehicle_status, mavlink_fd, (uint8_t)cmd->param1)) {
 				result = VEHICLE_CMD_RESULT_ACCEPTED;
+                //mavlink_log_info(mavlink_fd, "Command accepted");
 
 			} else {
 				result = VEHICLE_CMD_RESULT_DENIED;
+                //mavlink_log_info(mavlink_fd, "Command denied");
 			}
 		}
 		break;
 
 	case VEHICLE_CMD_COMPONENT_ARM_DISARM: {
+        
+        //mavlink_log_info(mavlink_fd, "Got message to arm_disarm");
+
 			/* request to arm */
 			if ((int)cmd->param1 == 1) {
 				if (OK == update_state_machine_mode_request(status_pub, current_vehicle_status, mavlink_fd, VEHICLE_MODE_FLAG_SAFETY_ARMED)) {
@@ -784,9 +791,11 @@ void handle_command(int status_pub, struct vehicle_status_s *current_vehicle_sta
 			} else if ((int)cmd->param1 == 0) {
 				if (OK == update_state_machine_mode_request(status_pub, current_vehicle_status, mavlink_fd, VEHICLE_MODE_FLAG_SAFETY_ARMED)) {
 					result = VEHICLE_CMD_RESULT_ACCEPTED;
+                     //mavlink_log_info(mavlink_fd, "Disarm command accepted");
 
 				} else {
 					result = VEHICLE_CMD_RESULT_DENIED;
+                    //mavlink_log_info(mavlink_fd, "Disarm command denied");
 				}
 			}
 		}
@@ -1964,6 +1973,9 @@ int commander_thread_main(int argc, char *argv[])
 
 		/* State machine update for offboard control */
 		if (!current_status.rc_signal_found_once && sp_offboard.timestamp != 0) {
+            
+            //mavlink_log_info(mavlink_fd, "Inside offboard control conditional");
+            
 			if ((hrt_absolute_time() - sp_offboard.timestamp) < 5000000) {
 
 				/* decide about attitude control flag, enable in att/pos/vel */
@@ -2019,30 +2031,46 @@ int commander_thread_main(int argc, char *argv[])
 				}
 
 			} else {
+                
+                //mavlink_log_info(mavlink_fd, "Offboard control potentially lost");
+                
+                //TF added
+                current_status.offboard_control_signal_lost = true;
+                state_changed = true;
+                tune_confirm();
+                
+                //current_status.failsave_lowlevel = true;
+                //state_changed = true;
+
+                /*
 				static uint64_t last_print_time = 0;
 
-				/* print error message for first RC glitch and then every 5 s / 5000 ms) */
+				// print error message for first RC glitch and then every 5 s / 5000 ms)
 				if (!current_status.offboard_control_signal_weak || ((hrt_absolute_time() - last_print_time) > 5000000)) {
 					current_status.offboard_control_signal_weak = true;
 					mavlink_log_critical(mavlink_fd, "CRIT:NO OFFBOARD CONTROL!");
 					last_print_time = hrt_absolute_time();
 				}
 
-				/* flag as lost and update interval since when the signal was lost (to initiate RTL after some time) */
+				// flag as lost and update interval since when the signal was lost (to initiate RTL after some time) */
 				current_status.offboard_control_signal_lost_interval = hrt_absolute_time() - sp_offboard.timestamp;
 
-				/* if the signal is gone for 0.1 seconds, consider it lost */
+				/* if the signal is gone for 0.1 seconds, consider it lost
 				if (current_status.offboard_control_signal_lost_interval > 100000) {
+                    
+                    mavlink_log_info(mavlink_fd, "Offboard control definitely lost");
+                    
 					current_status.offboard_control_signal_lost = true;
 					current_status.failsave_lowlevel_start_time = hrt_absolute_time();
 					tune_confirm();
 
-					/* kill motors after timeout */
+					// kill motors after timeout 
 					if (hrt_absolute_time() - current_status.failsave_lowlevel_start_time > failsafe_lowlevel_timeout_ms * 1000) {
 						current_status.failsave_lowlevel = true;
 						state_changed = true;
 					}
 				}
+                 */
 			}
 		}
 

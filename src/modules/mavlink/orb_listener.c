@@ -794,7 +794,7 @@ uorb_receive_start(void)
 
 	/* --- AIRSPEED / VFR / HUD --- */
 	mavlink_subs.airspeed_sub = orb_subscribe(ORB_ID(airspeed));
-	orb_set_interval(mavlink_subs.airspeed_sub, 200); 	/* 5Hz updates */
+	orb_set_interval(mavlink_subs.airspeed_sub, 20000); 	/* TF - changed from 200 5Hz updates */
 
 	/* start the listener loop */
 	pthread_attr_t uorb_attr;

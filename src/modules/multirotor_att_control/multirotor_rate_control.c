@@ -65,7 +65,7 @@ PARAM_DEFINE_FLOAT(MC_YAWRATE_I, 0.0f);
 //PARAM_DEFINE_FLOAT(MC_YAWRATE_AWU, 0.0f);
 //PARAM_DEFINE_FLOAT(MC_YAWRATE_LIM, 1.0f);
 
-PARAM_DEFINE_FLOAT(MC_ROLLRATE_SCALE, 1.0f);
+PARAM_DEFINE_FLOAT(MC_ROLLRATE_S, 1.0f);
 PARAM_DEFINE_FLOAT(MC_ATTRATE_P, 0.0f); /* 0.15 F405 Flamewheel */
 PARAM_DEFINE_FLOAT(MC_ATTRATE_D, 0.0f);
 PARAM_DEFINE_FLOAT(MC_ATTRATE_I, 0.0f);
@@ -128,7 +128,7 @@ static int parameters_init(struct mc_rate_control_param_handles *h)
 	//h->yawrate_awu 	=	param_find("MC_YAWRATE_AWU");
 	//h->yawrate_lim 	=	param_find("MC_YAWRATE_LIM");
 
-	h->rollrate_scale = param_find("MC_ROLLRATE_SCALE");
+	h->rollrate_scale = param_find("MC_ROLLRATE_S");
 	h->attrate_p 	= 	param_find("MC_ATTRATE_P");
 	h->attrate_i 	= 	param_find("MC_ATTRATE_I");
 	h->attrate_d 	= 	param_find("MC_ATTRATE_D");

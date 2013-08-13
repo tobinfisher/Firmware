@@ -67,7 +67,7 @@ PARAM_DEFINE_FLOAT(MC_YAWPOS_I, 0.15f);
 PARAM_DEFINE_FLOAT(MC_YAWPOS_D, 0.0f);
 //PARAM_DEFINE_FLOAT(MC_YAWPOS_AWU, 1.0f);
 //PARAM_DEFINE_FLOAT(MC_YAWPOS_LIM, 3.0f);
-PARAM_DEFINE_FLOAT(MC_ATT_ROLL_SCALE, 1.0f);
+PARAM_DEFINE_FLOAT(MC_ATTROLL_S, 1.0f);
 PARAM_DEFINE_FLOAT(MC_ATT_P, 0.2f);
 PARAM_DEFINE_FLOAT(MC_ATT_I, 0.0f);
 PARAM_DEFINE_FLOAT(MC_ATT_D, 0.05f);
@@ -135,7 +135,7 @@ static int parameters_init(struct mc_att_control_param_handles *h)
 	//h->yaw_awu 	=	param_find("MC_YAWPOS_AWU");
 	//h->yaw_lim 	=	param_find("MC_YAWPOS_LIM");
 
-	h->roll_scale = param_find("MC_ATT_ROLL_SCALE");
+	h->roll_scale = param_find("MC_ATTROLL_S");
 	h->att_p 	= 	param_find("MC_ATT_P");
 	h->att_i 	= 	param_find("MC_ATT_I");
 	h->att_d 	= 	param_find("MC_ATT_D");

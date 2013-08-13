@@ -67,7 +67,7 @@ PARAM_DEFINE_FLOAT(MC_YAWPOS_I, 0.15f);
 PARAM_DEFINE_FLOAT(MC_YAWPOS_D, 0.0f);
 //PARAM_DEFINE_FLOAT(MC_YAWPOS_AWU, 1.0f);
 //PARAM_DEFINE_FLOAT(MC_YAWPOS_LIM, 3.0f);
-
+PARAM_DEFINE_FLOAT(MC_ATT_ROLL_SCALE, 1.0f);
 PARAM_DEFINE_FLOAT(MC_ATT_P, 0.2f);
 PARAM_DEFINE_FLOAT(MC_ATT_I, 0.0f);
 PARAM_DEFINE_FLOAT(MC_ATT_D, 0.05f);
@@ -84,6 +84,7 @@ struct mc_att_control_params {
 	//float yaw_awu;
 	//float yaw_lim;
 
+	float roll_scale;
 	float att_p;
 	float att_i;
 	float att_d;
@@ -101,6 +102,7 @@ struct mc_att_control_param_handles {
 	//param_t yaw_awu;
 	//param_t yaw_lim;
 
+	param_t roll_scale;
 	param_t att_p;
 	param_t att_i;
 	param_t att_d;
@@ -133,6 +135,7 @@ static int parameters_init(struct mc_att_control_param_handles *h)
 	//h->yaw_awu 	=	param_find("MC_YAWPOS_AWU");
 	//h->yaw_lim 	=	param_find("MC_YAWPOS_LIM");
 
+	h->roll_scale = param_find("MC_ATT_ROLL_SCALE");
 	h->att_p 	= 	param_find("MC_ATT_P");
 	h->att_i 	= 	param_find("MC_ATT_I");
 	h->att_d 	= 	param_find("MC_ATT_D");
@@ -153,6 +156,7 @@ static int parameters_update(const struct mc_att_control_param_handles *h, struc
 	//param_get(h->yaw_awu, &(p->yaw_awu));
 	//param_get(h->yaw_lim, &(p->yaw_lim));
 
+	param_get(h->roll_scale, &(p->roll_scale));
 	param_get(h->att_p, &(p->att_p));
 	param_get(h->att_i, &(p->att_i));
 	param_get(h->att_d, &(p->att_d));
@@ -195,7 +199,7 @@ void multirotor_control_attitude(const struct vehicle_attitude_setpoint_s *att_s
 		parameters_update(&h, &p);
 
 		pid_init(&pitch_controller, p.att_p, p.att_i, p.att_d, 1000.0f, 1000.0f, PID_MODE_DERIVATIV_SET, 0.0f);
-		pid_init(&roll_controller, p.att_p, p.att_i, p.att_d, 1000.0f, 1000.0f, PID_MODE_DERIVATIV_SET, 0.0f);
+		pid_init(&roll_controller, p.att_p*p.roll_scale, p.att_i*p.roll_scale, p.att_d*p.roll_scale, 1000.0f, 1000.0f, PID_MODE_DERIVATIV_SET, 0.0f);
 
 		initialized = true;
 	}
@@ -207,7 +211,7 @@ void multirotor_control_attitude(const struct vehicle_attitude_setpoint_s *att_s
 
 		/* apply parameters */
 		pid_set_parameters(&pitch_controller, p.att_p, p.att_i, p.att_d, 1000.0f, 1000.0f);
-		pid_set_parameters(&roll_controller, p.att_p, p.att_i, p.att_d, 1000.0f, 1000.0f);
+		pid_set_parameters(&roll_controller, p.att_p*p.roll_scale, p.att_i*p.roll_scale, p.att_d*p.roll_scale, 1000.0f, 1000.0f);
 	}
 
 	/* reset integral if on ground */

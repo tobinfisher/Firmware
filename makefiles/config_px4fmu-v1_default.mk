@@ -76,7 +76,7 @@ MODULES		+= examples/flow_position_estimator
 # Vehicle Control
 #
 MODULES		+= modules/fixedwing_backside
-MODULES		+= modules/fixedwing_att_control
+#MODULES		+= modules/fixedwing_att_control
 MODULES		+= modules/fixedwing_pos_control
 MODULES		+= modules/multirotor_att_control
 MODULES		+= modules/multirotor_pos_control

@@ -630,6 +630,8 @@ void update_state_machine_mode_auto(int status_pub, struct vehicle_status_s *cur
 uint8_t update_state_machine_mode_request(int status_pub, struct vehicle_status_s *current_status, const int mavlink_fd, uint8_t mode)
 {
 	uint8_t ret = 1;
+    
+    mavlink_log_info(mavlink_fd, "Got state machine request");
 
 	/* Switch on HIL if in standby and not already in HIL mode */
 	if ((mode & VEHICLE_MODE_FLAG_HIL_ENABLED)
@@ -669,6 +671,7 @@ uint8_t update_state_machine_mode_request(int status_pub, struct vehicle_status_
 
 	/* vehicle is disarmed, mode requests arming */
 	if (!(current_status->flag_system_armed) && (mode & VEHICLE_MODE_FLAG_SAFETY_ARMED)) {
+        
 		/* only arm in standby state */
 		// XXX REMOVE
 		if (current_status->state_machine == SYSTEM_STATE_STANDBY || current_status->state_machine == SYSTEM_STATE_PREFLIGHT) {
@@ -677,16 +680,26 @@ uint8_t update_state_machine_mode_request(int status_pub, struct vehicle_status_
 			printf("[cmd] arming due to command request\n");
 		}
 	}
-
+    
 	/* vehicle is armed, mode requests disarming */
-	if (current_status->flag_system_armed && !(mode & VEHICLE_MODE_FLAG_SAFETY_ARMED)) {
+	//if (current_status->flag_system_armed && !(mode & VEHICLE_MODE_FLAG_SAFETY_ARMED)) {
+    else if (current_status->flag_system_armed) {
 		/* only disarm in ground ready */
-		if (current_status->state_machine == SYSTEM_STATE_GROUND_READY) {
-			do_state_update(status_pub, current_status, mavlink_fd, (commander_state_machine_t)SYSTEM_STATE_STANDBY);
-			ret = OK;
-			printf("[cmd] disarming due to command request\n");
-		}
+		// *** TF if (current_status->state_machine == SYSTEM_STATE_GROUND_READY) {
+        do_state_update(status_pub, current_status, mavlink_fd, (commander_state_machine_t)SYSTEM_STATE_STANDBY);
+        ret = OK;
+        printf("[cmd] disarming due to command request\n");
+        mavlink_log_info(mavlink_fd, "Should be disarming");
+		//}
 	}
+    
+    //if (current_status->flag_system_armed) {mavlink_log_info(mavlink_fd, "status is flag_system_armed");}
+    
+    //else {mavlink_log_info(mavlink_fd, "status is NOT flag_system_armed");}
+    
+    //if (!(mode & VEHICLE_MODE_FLAG_SAFETY_ARMED)) {mavlink_log_info(mavlink_fd, "!(mode & VEHICLE_MODE_FLAG_SAFETY_ARMED)");}
+    //else {mavlink_log_info(mavlink_fd, "NOT !(mode & VEHICLE_MODE_FLAG_SAFETY_ARMED)");}
+
 
 	/* NEVER actually switch off HIL without reboot */
 	if (current_status->flag_hil_enabled && !(mode & VEHICLE_MODE_FLAG_HIL_ENABLED)) {

@@ -79,6 +79,8 @@ __BEGIN_DECLS
 #include "util.h"
 
 extern bool gcs_link;
+#include <mavlink/mavlink_log.h>
+
 
 __END_DECLS
 
@@ -109,11 +111,66 @@ static orb_advert_t flow_pub = -1;
 static orb_advert_t offboard_control_sp_pub = -1;
 static orb_advert_t vicon_position_pub = -1;
 static orb_advert_t telemetry_status_pub = -1;
+static int mavlink_fd = 0;
+
+int message_counter = 0;
 
 static void
 handle_message(mavlink_message_t *msg)
 {
-	if (msg->msgid == MAVLINK_MSG_ID_COMMAND_LONG) {
+    if (mavlink_fd == 0) mavlink_fd = open(MAVLINK_LOG_DEVICE, 0);
+    
+    //mavlink_log_info(mavlink_fd, "Message id = %i", msg->msgid);
+    
+    if (msg->msgid == MAVLINK_MSG_ID_SET_MODE) {
+        
+        mavlink_log_info(mavlink_fd, "Got message to arm/disarm");
+        
+		/* Set mode on request */
+		mavlink_set_mode_t new_mode;
+		mavlink_msg_set_mode_decode(msg, &new_mode);
+        
+        if (new_mode.base_mode == 0) {
+            mavlink_log_info(mavlink_fd, "Got message to disarm");
+        }
+        
+        else if (new_mode.base_mode == MAV_MODE_STABILIZE_ARMED){
+            mavlink_log_info(mavlink_fd, "Got message to go into Stabilize Armed mode");
+        }
+        
+        else if (new_mode.base_mode == MAV_MODE_FLAG_SAFETY_ARMED){
+            mavlink_log_info(mavlink_fd, "Got message to go into Safety Armed mode");
+        }
+        
+		/* Copy the content of mavlink_command_long_t cmd_mavlink into command_t cmd */
+		vcmd.param1 = new_mode.base_mode;
+		vcmd.param2 = new_mode.custom_mode;
+		vcmd.param3 = 0;
+		vcmd.param4 = 0;
+		vcmd.param5 = 0;
+		vcmd.param6 = 0;
+		vcmd.param7 = 0;
+		vcmd.command = MAV_CMD_DO_SET_MODE;
+		vcmd.target_system = new_mode.target_system;
+		vcmd.target_component = MAV_COMP_ID_ALL;
+		vcmd.source_system = msg->sysid;
+		vcmd.source_component = msg->compid;
+		vcmd.confirmation = 1;
+        
+		/* check if topic is advertised */
+		if (cmd_pub <= 0) {
+            mavlink_log_info(mavlink_fd, "Topic is advertised");
+			cmd_pub = orb_advertise(ORB_ID(vehicle_command), &vcmd);
+            
+		} else {
+			/* create command */
+            mavlink_log_info(mavlink_fd, "Topic is not advertised");
+			orb_publish(ORB_ID(vehicle_command), cmd_pub, &vcmd);
+		}
+	}
+    
+    
+    if (msg->msgid == MAVLINK_MSG_ID_COMMAND_LONG) {
 
 		mavlink_command_long_t cmd_mavlink;
 		mavlink_msg_command_long_decode(msg, &cmd_mavlink);
@@ -157,6 +214,160 @@ handle_message(mavlink_message_t *msg)
 			}
 		}
 	}
+    
+    if (msg->msgid == MAVLINK_MSG_ID_MANUAL_CONTROL) {
+        
+        message_counter ++;
+        
+        if (message_counter % 20 == 0) {
+            
+            //mavlink_log_info(mavlink_fd, "ACK1");
+            
+            mavlink_message_t ack_msg;
+            mavlink_command_ack_t ack;
+            ack.command = MAVLINK_MSG_ID_MANUAL_CONTROL;
+            ack.result = MAV_RESULT_ACCEPTED;
+            mavlink_msg_command_ack_encode(mavlink_system.sysid, mavlink_system.compid, &ack_msg, &ack);
+            mavlink_missionlib_send_message(&ack_msg);
+        }
+        
+        
+        mavlink_manual_control_t man;
+        mavlink_msg_manual_control_decode(msg, &man);
+        
+        
+        if (TRUE) {
+            
+            //
+            gcs_link = TRUE;
+            
+            /*
+             * rate control mode - defined by MAVLink
+             */
+            
+            //Values for pitch and roll should be the desired angles in radians
+            //Assuming that we want to pitch/roll a max of 30 degrees, that means the value should vary between +/- .53
+            //The value of man.x and man.y vary by +/- 1000, so we want to scale this by 1886
+            offboard_control_sp.p1 = (float)man.x / 1000.0f;
+            offboard_control_sp.p2 = (float)man.y / 1000.0f;
+            offboard_control_sp.p3 = (float)man.r / 1000.0f;
+            offboard_control_sp.p4 = (float)man.z / 1000.0f;
+            
+            offboard_control_sp.armed = TRUE;
+            //offboard_control_sp.mode = OFFBOARD_CONTROL_MODE_DIRECT_RATES; //only pitches away for unknown reasons
+            //offboard_control_sp.mode = OFFBOARD_CONTROL_MODE_MULTIROTOR_SIMPLE; //no response x 2 tries
+            offboard_control_sp.mode = OFFBOARD_CONTROL_MODE_DIRECT_ATTITUDE;
+            
+            offboard_control_sp.timestamp = hrt_absolute_time();
+            
+            /* check if topic has to be advertised */
+            if (offboard_control_sp_pub <= 0) {
+                offboard_control_sp_pub = orb_advertise(ORB_ID(offboard_control_setpoint), &offboard_control_sp);
+                
+            } else {
+                // Publish
+                orb_publish(ORB_ID(offboard_control_setpoint), offboard_control_sp_pub, &offboard_control_sp);
+            }
+        }
+    
+        
+        else {
+        
+            mavlink_log_info(mavlink_fd, "Got message for rc override");
+            struct rc_channels_s rc_hil;
+            memset(&rc_hil, 0, sizeof(rc_hil));
+            static orb_advert_t rc_pub = 0;
+            
+            rc_hil.timestamp = hrt_absolute_time();
+            rc_hil.chan_count = 4;
+            
+            rc_hil.chan[0].scaled = man.x / 1000.0f;
+            rc_hil.chan[1].scaled = man.y / 1000.0f;
+            rc_hil.chan[2].scaled = man.r / 1000.0f;
+            rc_hil.chan[3].scaled = man.z / 1000.0f;
+            
+            struct manual_control_setpoint_s mc;
+            static orb_advert_t mc_pub = 0;
+            
+            int manual_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
+            
+            //get a copy first, to prevent altering values that are not sent by the mavlink command
+            orb_copy(ORB_ID(manual_control_setpoint), manual_sub, &mc);
+            
+            mc.timestamp = rc_hil.timestamp;
+            mc.roll = man.x / 1000.0f;
+            mc.pitch = man.y / 1000.0f;
+            mc.yaw = man.r / 1000.0f;
+            mc.throttle = man.z / 1000.0f;
+            
+            // fake RC channels with manual control input from simulator
+            if (rc_pub == 0) {
+                rc_pub = orb_advertise(ORB_ID(rc_channels), &rc_hil);
+                
+            } else {
+                orb_publish(ORB_ID(rc_channels), rc_pub, &rc_hil);
+            }
+            
+            if (mc_pub == 0) {
+                mc_pub = orb_advertise(ORB_ID(manual_control_setpoint), &mc);
+                
+            } else {
+                orb_publish(ORB_ID(manual_control_setpoint), mc_pub, &mc);
+            }
+        }
+    }
+    
+    if (msg->msgid == MAVLINK_MSG_ID_MANUAL_CONTROL_SMALL) {
+        
+        message_counter ++;
+        
+        if (message_counter % 20 == 0) {
+            
+            //mavlink_log_info(mavlink_fd, "ACK1");
+            
+            mavlink_message_t ack_msg;
+            mavlink_command_ack_t ack;
+            ack.command = MAVLINK_MSG_ID_MANUAL_CONTROL;
+            ack.result = MAV_RESULT_ACCEPTED;
+            mavlink_msg_command_ack_encode(mavlink_system.sysid, mavlink_system.compid, &ack_msg, &ack);
+            mavlink_missionlib_send_message(&ack_msg);
+        }
+        
+        
+        mavlink_manual_control_small_t man;
+        mavlink_msg_manual_control_small_decode(msg, &man);
+        
+        gcs_link = TRUE;
+        
+        /*
+         * rate control mode - defined by MAVLink
+         */
+        
+        //Values for pitch and roll should be the desired angles in radians
+        //Assuming that we want to pitch/roll a max of 30 degrees, that means the value should vary between +/- .53
+        //The value of man.x and man.y vary by +/- 1000, so we want to scale this by 1886
+        offboard_control_sp.p1 = (float)man.x / 1000.0f;
+        offboard_control_sp.p2 = (float)man.y / 1000.0f;
+        offboard_control_sp.p3 = (float)man.r / 1000.0f;
+        offboard_control_sp.p4 = (float)man.z / 1000.0f;
+        
+        offboard_control_sp.armed = TRUE;
+        //offboard_control_sp.mode = OFFBOARD_CONTROL_MODE_DIRECT_RATES; //only pitches away for unknown reasons
+        //offboard_control_sp.mode = OFFBOARD_CONTROL_MODE_MULTIROTOR_SIMPLE; //no response x 2 tries
+        offboard_control_sp.mode = OFFBOARD_CONTROL_MODE_DIRECT_ATTITUDE;
+        
+        offboard_control_sp.timestamp = hrt_absolute_time();
+        
+        /* check if topic has to be advertised */
+        if (offboard_control_sp_pub <= 0) {
+            offboard_control_sp_pub = orb_advertise(ORB_ID(offboard_control_setpoint), &offboard_control_sp);
+            
+        } else {
+            // Publish
+            orb_publish(ORB_ID(offboard_control_setpoint), offboard_control_sp_pub, &offboard_control_sp);
+        }
+    }
+
 
 	if (msg->msgid == MAVLINK_MSG_ID_OPTICAL_FLOW) {
 		mavlink_optical_flow_t flow;
@@ -180,36 +391,6 @@ handle_message(mavlink_message_t *msg)
 		} else {
 			/* publish */
 			orb_publish(ORB_ID(optical_flow), flow_pub, &f);
-		}
-	}
-
-	if (msg->msgid == MAVLINK_MSG_ID_SET_MODE) {
-		/* Set mode on request */
-		mavlink_set_mode_t new_mode;
-		mavlink_msg_set_mode_decode(msg, &new_mode);
-
-		/* Copy the content of mavlink_command_long_t cmd_mavlink into command_t cmd */
-		vcmd.param1 = new_mode.base_mode;
-		vcmd.param2 = new_mode.custom_mode;
-		vcmd.param3 = 0;
-		vcmd.param4 = 0;
-		vcmd.param5 = 0;
-		vcmd.param6 = 0;
-		vcmd.param7 = 0;
-		vcmd.command = MAV_CMD_DO_SET_MODE;
-		vcmd.target_system = new_mode.target_system;
-		vcmd.target_component = MAV_COMP_ID_ALL;
-		vcmd.source_system = msg->sysid;
-		vcmd.source_component = msg->compid;
-		vcmd.confirmation = 1;
-
-		/* check if topic is advertised */
-		if (cmd_pub <= 0) {
-			cmd_pub = orb_advertise(ORB_ID(vehicle_command), &vcmd);
-
-		} else {
-			/* create command */
-			orb_publish(ORB_ID(vehicle_command), cmd_pub, &vcmd);
 		}
 	}
 
@@ -660,7 +841,7 @@ receive_start(int uart)
 	fcntl(uart, F_SETFL, flags | O_NONBLOCK);
 
 	struct sched_param param;
-	param.sched_priority = SCHED_PRIORITY_MAX - 40;
+	param.sched_priority = SCHED_PRIORITY_MAX - 40; //TF - removed the -40;
 	(void)pthread_attr_setschedparam(&receiveloop_attr, &param);
 
 	pthread_attr_setstacksize(&receiveloop_attr, 3000);

@@ -470,6 +470,7 @@ enum MAV_SEVERITY
 #include "./mavlink_msg_request_data_stream.h"
 #include "./mavlink_msg_data_stream.h"
 #include "./mavlink_msg_manual_control.h"
+#include "./mavlink_msg_manual_control_small.h"
 #include "./mavlink_msg_rc_channels_override.h"
 #include "./mavlink_msg_vfr_hud.h"
 #include "./mavlink_msg_command_long.h"

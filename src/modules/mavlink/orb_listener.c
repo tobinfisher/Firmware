@@ -701,7 +701,7 @@ uorb_receive_start(void)
 	/* --- ATTITUDE VALUE --- */
 	mavlink_subs.att_sub = orb_subscribe(ORB_ID(vehicle_attitude));
 	/* rate limit set externally based on interface speed, set a basic default here */
-	orb_set_interval(mavlink_subs.att_sub, 200);	/* 5Hz updates */
+	orb_set_interval(mavlink_subs.att_sub, 50);	/* 5Hz updates */
 
 	/* --- GPS VALUE --- */
     //TF changed from 200
@@ -775,7 +775,7 @@ uorb_receive_start(void)
 	/* --- MAPPED MANUAL CONTROL INPUTS --- */
 	mavlink_subs.man_control_sp_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
 	/* rate limits set externally based on interface speed, set a basic default here */
-	orb_set_interval(mavlink_subs.man_control_sp_sub, 100);	/* 10Hz updates */
+	orb_set_interval(mavlink_subs.man_control_sp_sub, 50);	/* TF - Changed from 100 * 10Hz updates */
 
 	/* --- ACTUATOR CONTROL VALUE --- */
     // TF changd from 100
@@ -794,7 +794,7 @@ uorb_receive_start(void)
 
 	/* --- AIRSPEED / VFR / HUD --- */
 	mavlink_subs.airspeed_sub = orb_subscribe(ORB_ID(airspeed));
-	orb_set_interval(mavlink_subs.airspeed_sub, 20000); 	/* TF - changed from 200 5Hz updates */
+	orb_set_interval(mavlink_subs.airspeed_sub, 200000); 	/* TF - changed from 200 5Hz updates */
 
 	/* start the listener loop */
 	pthread_attr_t uorb_attr;

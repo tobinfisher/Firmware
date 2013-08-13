@@ -637,9 +637,9 @@ int mavlink_thread_main(int argc, char *argv[])
 		/* 10 Hz / 100 ms - TF Changed from 300 */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_RAW_IMU, 20000);
         // TF - Changed from 500
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_HIGHRES_IMU, 50);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_HIGHRES_IMU, 200);
 		/* 10 Hz / 100 ms ATTITUDE */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_ATTITUDE, 50);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_ATTITUDE, 100);
 		/* 5 Hz / 200 ms - TF Changed from 200 */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_NAMED_VALUE_FLOAT, 20000);
 		/* 5 Hz / 200 ms Changed from 500 */

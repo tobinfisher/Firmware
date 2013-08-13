@@ -125,7 +125,7 @@ int attitude_estimator_madgwick_main(int argc, char *argv[])
 		}
 
 		thread_should_exit = false;
-		attitude_estimator_ekf_task = task_spawn("attitude_estimator_madgwick",
+		attitude_estimator_ekf_task = task_spawn_cmd("attitude_estimator_madgwick",
 					      SCHED_DEFAULT,
 					      SCHED_PRIORITY_MAX - 5,
 					      12400,

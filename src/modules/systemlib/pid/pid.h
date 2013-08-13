@@ -67,6 +67,7 @@ __BEGIN_DECLS
 #define PID_MODE_DERIVATIV_NONE 9
 
 typedef struct {
+	float roll_scale;
 	float kp;
 	float ki;
 	float kd;

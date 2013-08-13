@@ -65,6 +65,7 @@ PARAM_DEFINE_FLOAT(MC_YAWRATE_I, 0.0f);
 //PARAM_DEFINE_FLOAT(MC_YAWRATE_AWU, 0.0f);
 //PARAM_DEFINE_FLOAT(MC_YAWRATE_LIM, 1.0f);
 
+PARAM_DEFINE_FLOAT(MC_ROLLRATE_SCALE, 1.0f);
 PARAM_DEFINE_FLOAT(MC_ATTRATE_P, 0.0f); /* 0.15 F405 Flamewheel */
 PARAM_DEFINE_FLOAT(MC_ATTRATE_D, 0.0f);
 PARAM_DEFINE_FLOAT(MC_ATTRATE_I, 0.0f);
@@ -79,6 +80,7 @@ struct mc_rate_control_params {
 	//float yawrate_awu;
 	//float yawrate_lim;
 
+	float rollrate_scale;
 	float attrate_p;
 	float attrate_d;
 	float attrate_i;
@@ -96,6 +98,7 @@ struct mc_rate_control_param_handles {
 	//param_t yawrate_awu;
 	//param_t yawrate_lim;
 
+	param_t rollrate_scale;
 	param_t attrate_p;
 	param_t attrate_i;
 	param_t attrate_d;
@@ -125,6 +128,7 @@ static int parameters_init(struct mc_rate_control_param_handles *h)
 	//h->yawrate_awu 	=	param_find("MC_YAWRATE_AWU");
 	//h->yawrate_lim 	=	param_find("MC_YAWRATE_LIM");
 
+	h->rollrate_scale = param_find("MC_ROLLRATE_SCALE");
 	h->attrate_p 	= 	param_find("MC_ATTRATE_P");
 	h->attrate_i 	= 	param_find("MC_ATTRATE_I");
 	h->attrate_d 	= 	param_find("MC_ATTRATE_D");
@@ -142,6 +146,7 @@ static int parameters_update(const struct mc_rate_control_param_handles *h, stru
 	//param_get(h->yawrate_awu, &(p->yawrate_awu));
 	//param_get(h->yawrate_lim, &(p->yawrate_lim));
 
+	param_get(h->rollrate_scale, &(p->rollrate_scale));
 	param_get(h->attrate_p, &(p->attrate_p));
 	param_get(h->attrate_i, &(p->attrate_i));
 	param_get(h->attrate_d, &(p->attrate_d));
@@ -181,7 +186,7 @@ void multirotor_control_rates(const struct vehicle_rates_setpoint_s *rate_sp,
 		initialized = true;
 
 		pid_init(&pitch_rate_controller, p.attrate_p, p.attrate_i, p.attrate_d, 1.0f, 1.0f, PID_MODE_DERIVATIV_CALC_NO_SP, 0.003f);
-		pid_init(&roll_rate_controller, p.attrate_p, p.attrate_i, p.attrate_d, 1.0f, 1.0f, PID_MODE_DERIVATIV_CALC_NO_SP, 0.003f);
+		pid_init(&roll_rate_controller, p.attrate_p*p.rollrate_scale, p.attrate_i*p.rollrate_scale, p.attrate_d*p.rollrate_scale, 1.0f, 1.0f, PID_MODE_DERIVATIV_CALC_NO_SP, 0.003f);
 
 	}
 
@@ -190,7 +195,7 @@ void multirotor_control_rates(const struct vehicle_rates_setpoint_s *rate_sp,
 		/* update parameters from storage */
 		parameters_update(&h, &p);
 		pid_set_parameters(&pitch_rate_controller, p.attrate_p, p.attrate_i, p.attrate_d, 1.0f, 1.0f);
-		pid_set_parameters(&roll_rate_controller,  p.attrate_p, p.attrate_i, p.attrate_d, 1.0f, 1.0f);
+		pid_set_parameters(&roll_rate_controller,  p.attrate_p*p.rollrate_scale, p.attrate_i*p.rollrate_scale, p.attrate_d*p.rollrate_scale, 1.0f, 1.0f);
 	}
 
 	/* reset integrals if needed */

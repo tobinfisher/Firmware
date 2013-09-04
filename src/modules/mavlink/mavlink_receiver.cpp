@@ -512,6 +512,14 @@ handle_message(mavlink_message_t *msg)
 		tstatus.remote_noise = rstatus.remnoise;
 		tstatus.rxerrors = rstatus.rxerrors;
 		tstatus.fixed = rstatus.fixed;
+        
+        
+        mavlink_message_t radio_msg;
+        
+        mavlink_msg_radio_status_pack(mavlink_system.sysid, mavlink_system.compid, &radio_msg, rstatus.rssi, rstatus.remrssi, rstatus.txbuf, rstatus.noise, rstatus.remnoise, rstatus.rxerrors, rstatus.fixed);
+        
+        mavlink_missionlib_send_message(&radio_msg);
+       
 
 		if (telemetry_status_pub == 0) {
 			telemetry_status_pub = orb_advertise(ORB_ID(telemetry_status), &tstatus);

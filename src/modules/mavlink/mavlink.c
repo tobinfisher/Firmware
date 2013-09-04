@@ -618,19 +618,19 @@ int mavlink_thread_main(int argc, char *argv[])
 
 	} else if (baudrate >= 57600) {
 		/* 10 Hz / 100 ms - TF Changed from 300 */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_RAW_IMU, 20000);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_RAW_IMU, 200); //Set higher for testing magnetometer
         // TF - Changed from 500
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_HIGHRES_IMU, 200);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_HIGHRES_IMU, 50000);
 		/* 10 Hz / 100 ms ATTITUDE */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_ATTITUDE, 100);
 		/* 5 Hz / 200 ms - TF Changed from 200 */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_NAMED_VALUE_FLOAT, 20000);
 		/* 5 Hz / 200 ms Changed from 500 */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_SERVO_OUTPUT_RAW, 20000);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_SERVO_OUTPUT_RAW, 2000000);
 		/* 2 Hz - TF Changed from 500 */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_MANUAL_CONTROL, 50);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_MANUAL_CONTROL, 500000);
 		/* 2 Hz TF Changed from 500 */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_GPS_RAW_INT, 20000);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_GPS_RAW_INT, 500);
         
 	} else {
 		/* very low baud rate, limit to 1 Hz / 1000 ms */

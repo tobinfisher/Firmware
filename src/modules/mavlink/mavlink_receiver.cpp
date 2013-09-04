@@ -131,6 +131,57 @@ handle_message(mavlink_message_t *msg)
     
     //mavlink_log_info(mavlink_fd, "Message id = %i", msg->msgid);
     
+<<<<<<< HEAD
+=======
+    if (msg->msgid == MAVLINK_MSG_ID_SET_MODE) {
+        
+        mavlink_log_info(mavlink_fd, "Got message to arm/disarm");
+        
+		/* Set mode on request */
+		mavlink_set_mode_t new_mode;
+		mavlink_msg_set_mode_decode(msg, &new_mode);
+        
+        if (new_mode.base_mode == 0) {
+            mavlink_log_info(mavlink_fd, "Got message to disarm");
+        }
+        
+        else if (new_mode.base_mode == MAV_MODE_STABILIZE_ARMED){
+            mavlink_log_info(mavlink_fd, "Got message to go into Stabilize Armed mode");
+        }
+        
+        else if (new_mode.base_mode == MAV_MODE_FLAG_SAFETY_ARMED){
+            mavlink_log_info(mavlink_fd, "Got message to go into Safety Armed mode");
+        }
+        
+		/* Copy the content of mavlink_command_long_t cmd_mavlink into command_t cmd */
+		vcmd.param1 = new_mode.base_mode;
+		vcmd.param2 = new_mode.custom_mode;
+		vcmd.param3 = 0;
+		vcmd.param4 = 0;
+		vcmd.param5 = 0;
+		vcmd.param6 = 0;
+		vcmd.param7 = 0;
+		vcmd.command = MAV_CMD_DO_SET_MODE;
+		vcmd.target_system = new_mode.target_system;
+		vcmd.target_component = MAV_COMP_ID_ALL;
+		vcmd.source_system = msg->sysid;
+		vcmd.source_component = msg->compid;
+		vcmd.confirmation = 1;
+        
+		/* check if topic is advertised */
+		if (cmd_pub <= 0) {
+            mavlink_log_info(mavlink_fd, "Topic is advertised");
+			cmd_pub = orb_advertise(ORB_ID(vehicle_command), &vcmd);
+            
+		} else {
+			/* create command */
+            mavlink_log_info(mavlink_fd, "Topic is not advertised");
+			orb_publish(ORB_ID(vehicle_command), cmd_pub, &vcmd);
+		}
+	}
+    
+    
+>>>>>>> 20d59f909eb8dd52a5d506a42fbc56c0f1188608
     if (msg->msgid == MAVLINK_MSG_ID_COMMAND_LONG) {
 
 		mavlink_command_long_t cmd_mavlink;
@@ -355,6 +406,7 @@ handle_message(mavlink_message_t *msg)
 		}
 	}
 
+<<<<<<< HEAD
     if (msg->msgid == MAVLINK_MSG_ID_SET_MODE) {
         
         mavlink_log_info(mavlink_fd, "Got message to arm/disarm");
@@ -402,6 +454,8 @@ handle_message(mavlink_message_t *msg)
 		}
 	}
 
+=======
+>>>>>>> 20d59f909eb8dd52a5d506a42fbc56c0f1188608
 	/* Handle Vicon position estimates */
 	if (msg->msgid == MAVLINK_MSG_ID_VICON_POSITION_ESTIMATE) {
 		mavlink_vicon_position_estimate_t pos;

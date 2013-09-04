@@ -812,8 +812,14 @@ uorb_receive_start(void)
 	orb_set_interval(mavlink_subs.man_control_sp_sub, 100);	/* TF - Changed from 100 * 10Hz updates */
 
 	/* --- ACTUATOR CONTROL VALUE --- */
+<<<<<<< HEAD
 	mavlink_subs.actuators_sub = orb_subscribe(ORB_ID_VEHICLE_ATTITUDE_CONTROLS);
 	orb_set_interval(mavlink_subs.actuators_sub, 100);	/* 10Hz updates */
+=======
+    // TF changd from 100
+	mavlink_subs.actuators_sub = orb_subscribe(ORB_ID_VEHICLE_ATTITUDE_CONTROLS_EFFECTIVE);
+	orb_set_interval(mavlink_subs.actuators_sub, 1000000);	/* 10Hz updates */
+>>>>>>> 20d59f909eb8dd52a5d506a42fbc56c0f1188608
 
     // TF changd from 100
 	mavlink_subs.actuators_sub = orb_subscribe(ORB_ID_VEHICLE_ATTITUDE_CONTROLS_EFFECTIVE);

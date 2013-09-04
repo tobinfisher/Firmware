@@ -214,6 +214,7 @@ mc_thread_main(int argc, char *argv[])
 				/* set flag to safe value */
 				control_yaw_position = true;
 
+<<<<<<< HEAD
 				/* reset yaw setpoint if not armed */
 				if (!control_mode.flag_armed) {
 					reset_yaw_sp = true;
@@ -240,6 +241,8 @@ mc_thread_main(int argc, char *argv[])
 						orb_publish(ORB_ID(vehicle_attitude_setpoint), att_sp_pub, &att_sp);
 					}
 */
+=======
+>>>>>>> 20d59f909eb8dd52a5d506a42fbc56c0f1188608
 				/** STEP 1: Define which input is the dominating control input */
 				if (state.flag_control_offboard_enabled) {
                     
@@ -306,6 +309,7 @@ mc_thread_main(int argc, char *argv[])
                             orb_publish(ORB_ID(vehicle_attitude_setpoint), att_sp_pub, &att_sp);
                         }
                     }
+<<<<<<< HEAD
 
 					/* reset yaw setpoint after offboard control */
 					reset_yaw_sp = true;
@@ -323,6 +327,8 @@ mc_thread_main(int argc, char *argv[])
 								/* reset yaw setpoint if on ground */
 								reset_yaw_sp = true;
 							}
+=======
+>>>>>>> 20d59f909eb8dd52a5d506a42fbc56c0f1188608
 
 						} else {
 							/* only move yaw setpoint if manual input is != 0 */

@@ -12,7 +12,7 @@
 
 
 #define BETA 0.035f
-#define ZETA 0.02f
+#define ZETA 0.005f
 
 
 static float q[4]={1.0,0.0,0.0,0.0};
@@ -52,7 +52,7 @@ float *AttitudeUpdate(float dt,float a_x,float a_y, float a_z,float w_x, float w
 	float qConj[4];
 	float unbiasedGyro[4];
 	float qDot[4];
-	float beta;
+	float beta,zeta;
 	float F[6];
 	float J[6*4];
 	float step[4];
@@ -132,7 +132,7 @@ float *AttitudeUpdate(float dt,float a_x,float a_y, float a_z,float w_x, float w
     QuatScale(_error,(2.0f*dt));
 
     // update gyro biases
-    w_bx += ZETA*_error[1]; w_by += ZETA*_error[2]; w_bz += ZETA*_error[3];
+    w_bx += zeta*_error[1]; w_by += zeta*_error[2]; w_bz += zeta*_error[3];
 
     // quaternion dynamics
     unbiasedGyro[0] = 0; unbiasedGyro[1] = (w_x-w_bx); unbiasedGyro[2]= (w_y-w_by); unbiasedGyro[3] = (w_z-w_bz);
@@ -140,10 +140,16 @@ float *AttitudeUpdate(float dt,float a_x,float a_y, float a_z,float w_x, float w
     
     
     // higher gain during startup
-    if(counter < 10.0f)
+    if(counter < 5.0f)
+    {
         beta = 1.0f;
+        zeta = 1.0f;
+    }
     else
+    {
         beta = BETA;
+        zeta = ZETA;
+    }
     
     qDot[0] = 0.5f*qDot[0] - beta*step[0];
     qDot[1] = 0.5f*qDot[1] - beta*step[1];

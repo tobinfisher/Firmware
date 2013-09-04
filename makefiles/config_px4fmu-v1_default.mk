@@ -66,7 +66,7 @@ MODULES		+= modules/gpio_led
 #
 # Estimation modules (EKF / other filters)
 #
-#MODULES	 	+= modules/attitude_estimator_madgwick
+#MODULES	+= modules/attitude_estimator_madgwick
 MODULES		+= modules/attitude_estimator_ekf
 MODULES		+= modules/attitude_estimator_so3_comp
 MODULES		+= modules/position_estimator

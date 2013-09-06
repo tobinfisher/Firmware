@@ -775,14 +775,16 @@ void handle_command(int status_pub, struct vehicle_status_s *current_vehicle_sta
 
 	case VEHICLE_CMD_COMPONENT_ARM_DISARM: {
         
-        //mavlink_log_info(mavlink_fd, "Got message to arm_disarm");
+        mavlink_log_info(mavlink_fd, "Got message to arm_disarm");
 
 			/* request to arm */
 			if ((int)cmd->param1 == 1) {
 				if (OK == update_state_machine_mode_request(status_pub, current_vehicle_status, mavlink_fd, VEHICLE_MODE_FLAG_SAFETY_ARMED)) {
+                     mavlink_log_info(mavlink_fd, "Arm command accepted");
 					result = VEHICLE_CMD_RESULT_ACCEPTED;
 
 				} else {
+                     mavlink_log_info(mavlink_fd, "Arm command denied");
 					result = VEHICLE_CMD_RESULT_DENIED;
 				}
 
@@ -791,11 +793,11 @@ void handle_command(int status_pub, struct vehicle_status_s *current_vehicle_sta
 			} else if ((int)cmd->param1 == 0) {
 				if (OK == update_state_machine_mode_request(status_pub, current_vehicle_status, mavlink_fd, VEHICLE_MODE_FLAG_SAFETY_ARMED)) {
 					result = VEHICLE_CMD_RESULT_ACCEPTED;
-                     //mavlink_log_info(mavlink_fd, "Disarm command accepted");
+                     mavlink_log_info(mavlink_fd, "Disarm command accepted");
 
 				} else {
 					result = VEHICLE_CMD_RESULT_DENIED;
-                    //mavlink_log_info(mavlink_fd, "Disarm command denied");
+                    mavlink_log_info(mavlink_fd, "Disarm command denied");
 				}
 			}
 		}
@@ -1974,7 +1976,7 @@ int commander_thread_main(int argc, char *argv[])
 		/* State machine update for offboard control */
 		if (!current_status.rc_signal_found_once && sp_offboard.timestamp != 0) {
             
-            //mavlink_log_info(mavlink_fd, "Inside offboard control conditional");
+            mavlink_log_info(mavlink_fd, "Inside offboard control conditional");
             
 			if ((hrt_absolute_time() - sp_offboard.timestamp) < 5000000) {
 

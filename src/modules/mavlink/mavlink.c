@@ -286,6 +286,7 @@ int set_mavlink_interval_limit(struct mavlink_subscriptions *subs, int mavlink_m
 
 	case MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:
 		/* actuator_outputs triggers this message */
+        //min_interval = 10000000; //TF added
 		orb_set_interval(subs->act_0_sub, min_interval);
 		orb_set_interval(subs->act_1_sub, min_interval);
 		orb_set_interval(subs->act_2_sub, min_interval);
@@ -302,6 +303,7 @@ int set_mavlink_interval_limit(struct mavlink_subscriptions *subs, int mavlink_m
 		break;
 
 	case MAVLINK_MSG_ID_NAMED_VALUE_FLOAT:
+            min_interval = 100000000;
 		orb_set_interval(subs->debug_key_value, min_interval);
 		break;
 
@@ -618,19 +620,19 @@ int mavlink_thread_main(int argc, char *argv[])
 
 	} else if (baudrate >= 57600) {
 		/* 10 Hz / 100 ms - TF Changed from 300 */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_RAW_IMU, 200); //Set higher for testing magnetometer
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_RAW_IMU, 400000); //Set higher for testing magnetometer
         // TF - Changed from 500
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_HIGHRES_IMU, 50000);
 		/* 10 Hz / 100 ms ATTITUDE */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_ATTITUDE, 100);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_ATTITUDE, 200);
 		/* 5 Hz / 200 ms - TF Changed from 200 */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_NAMED_VALUE_FLOAT, 20000);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_NAMED_VALUE_FLOAT, 200000);
 		/* 5 Hz / 200 ms Changed from 500 */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_SERVO_OUTPUT_RAW, 2000000);
 		/* 2 Hz - TF Changed from 500 */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_MANUAL_CONTROL, 500000);
 		/* 2 Hz TF Changed from 500 */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_GPS_RAW_INT, 500);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_GPS_RAW_INT, 500000);
         
 	} else {
 		/* very low baud rate, limit to 1 Hz / 1000 ms */

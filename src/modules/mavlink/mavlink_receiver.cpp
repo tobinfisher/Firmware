@@ -131,57 +131,6 @@ handle_message(mavlink_message_t *msg)
     
     //mavlink_log_info(mavlink_fd, "Message id = %i", msg->msgid);
     
-<<<<<<< HEAD
-=======
-    if (msg->msgid == MAVLINK_MSG_ID_SET_MODE) {
-        
-        mavlink_log_info(mavlink_fd, "Got message to arm/disarm");
-        
-		/* Set mode on request */
-		mavlink_set_mode_t new_mode;
-		mavlink_msg_set_mode_decode(msg, &new_mode);
-        
-        if (new_mode.base_mode == 0) {
-            mavlink_log_info(mavlink_fd, "Got message to disarm");
-        }
-        
-        else if (new_mode.base_mode == MAV_MODE_STABILIZE_ARMED){
-            mavlink_log_info(mavlink_fd, "Got message to go into Stabilize Armed mode");
-        }
-        
-        else if (new_mode.base_mode == MAV_MODE_FLAG_SAFETY_ARMED){
-            mavlink_log_info(mavlink_fd, "Got message to go into Safety Armed mode");
-        }
-        
-		/* Copy the content of mavlink_command_long_t cmd_mavlink into command_t cmd */
-		vcmd.param1 = new_mode.base_mode;
-		vcmd.param2 = new_mode.custom_mode;
-		vcmd.param3 = 0;
-		vcmd.param4 = 0;
-		vcmd.param5 = 0;
-		vcmd.param6 = 0;
-		vcmd.param7 = 0;
-		vcmd.command = MAV_CMD_DO_SET_MODE;
-		vcmd.target_system = new_mode.target_system;
-		vcmd.target_component = MAV_COMP_ID_ALL;
-		vcmd.source_system = msg->sysid;
-		vcmd.source_component = msg->compid;
-		vcmd.confirmation = 1;
-        
-		/* check if topic is advertised */
-		if (cmd_pub <= 0) {
-            mavlink_log_info(mavlink_fd, "Topic is advertised");
-			cmd_pub = orb_advertise(ORB_ID(vehicle_command), &vcmd);
-            
-		} else {
-			/* create command */
-            mavlink_log_info(mavlink_fd, "Topic is not advertised");
-			orb_publish(ORB_ID(vehicle_command), cmd_pub, &vcmd);
-		}
-	}
-    
-    
->>>>>>> 20d59f909eb8dd52a5d506a42fbc56c0f1188608
     if (msg->msgid == MAVLINK_MSG_ID_COMMAND_LONG) {
 
 		mavlink_command_long_t cmd_mavlink;
@@ -189,6 +138,9 @@ handle_message(mavlink_message_t *msg)
 
 		if (cmd_mavlink.target_system == mavlink_system.sysid && ((cmd_mavlink.target_component == mavlink_system.compid)
 				|| (cmd_mavlink.target_component == MAV_COMP_ID_ALL))) {
+            
+            mavlink_log_info(mavlink_fd, "Got a command long");
+            
 			//check for MAVLINK terminate command
 			if (cmd_mavlink.command == MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN && ((int)cmd_mavlink.param1) == 3) {
 				/* This is the link shutdown command, terminate mavlink */
@@ -233,7 +185,55 @@ handle_message(mavlink_message_t *msg)
         
         if (message_counter % 20 == 0) {
             
-            //mavlink_log_info(mavlink_fd, "ACK1");
+            mavlink_message_t ack_msg;
+            mavlink_command_ack_t ack;
+            ack.command = MAVLINK_MSG_ID_MANUAL_CONTROL;
+            ack.result = MAV_RESULT_ACCEPTED;
+            mavlink_msg_command_ack_encode(mavlink_system.sysid, mavlink_system.compid, &ack_msg, &ack);
+            mavlink_missionlib_send_message(&ack_msg);
+        }
+        
+        
+        mavlink_manual_control_t man;
+        mavlink_msg_manual_control_decode(msg, &man);
+        
+        gcs_link = TRUE;
+        
+        /*
+         * rate control mode - defined by MAVLink
+         */
+        
+        //Values for pitch and roll should be the desired angles in radians
+        //Assuming that we want to pitch/roll a max of 30 degrees, that means the value should vary between +/- .53
+        //The value of man.x and man.y vary by +/- 1000, so we want to scale this by 1886
+        offboard_control_sp.p1 = (float)man.x / 1000.0f;
+        offboard_control_sp.p2 = (float)man.y / 1000.0f;
+        offboard_control_sp.p3 = (float)man.r / 1000.0f;
+        offboard_control_sp.p4 = (float)man.z / 1000.0f;
+        
+        offboard_control_sp.armed = TRUE;
+        //offboard_control_sp.mode = OFFBOARD_CONTROL_MODE_DIRECT_RATES; //only pitches away for unknown reasons
+        //offboard_control_sp.mode = OFFBOARD_CONTROL_MODE_MULTIROTOR_SIMPLE; //no response x 2 tries
+        offboard_control_sp.mode = OFFBOARD_CONTROL_MODE_DIRECT_ATTITUDE;
+        
+        offboard_control_sp.timestamp = hrt_absolute_time();
+        
+        /* check if topic has to be advertised */
+        if (offboard_control_sp_pub <= 0) {
+            offboard_control_sp_pub = orb_advertise(ORB_ID(offboard_control_setpoint), &offboard_control_sp);
+            
+        } else {
+            // Publish
+            orb_publish(ORB_ID(offboard_control_setpoint), offboard_control_sp_pub, &offboard_control_sp);
+        }
+    }
+    
+    
+    if (msg->msgid == MAVLINK_MSG_ID_MANUAL_CONTROL) {
+        
+        message_counter ++;
+        
+        if (message_counter % 20 == 0) {
             
             mavlink_message_t ack_msg;
             mavlink_command_ack_t ack;
@@ -406,7 +406,6 @@ handle_message(mavlink_message_t *msg)
 		}
 	}
 
-<<<<<<< HEAD
     if (msg->msgid == MAVLINK_MSG_ID_SET_MODE) {
         
         mavlink_log_info(mavlink_fd, "Got message to arm/disarm");
@@ -454,8 +453,6 @@ handle_message(mavlink_message_t *msg)
 		}
 	}
 
-=======
->>>>>>> 20d59f909eb8dd52a5d506a42fbc56c0f1188608
 	/* Handle Vicon position estimates */
 	if (msg->msgid == MAVLINK_MSG_ID_VICON_POSITION_ESTIMATE) {
 		mavlink_vicon_position_estimate_t pos;

@@ -293,7 +293,7 @@ int set_mavlink_interval_limit(struct mavlink_subscriptions *subs, int mavlink_m
 		orb_set_interval(subs->act_3_sub, min_interval);
 		orb_set_interval(subs->actuators_sub, min_interval);
 		orb_set_interval(subs->actuators_effective_sub, min_interval);
-		orb_set_interval(subs->spa_sub, min_interval);
+		//orb_set_interval(subs->spa_sub, min_interval);
 		orb_set_interval(mavlink_subs.rates_setpoint_sub, min_interval);
 		break;
 
@@ -626,11 +626,11 @@ int mavlink_thread_main(int argc, char *argv[])
 		/* 10 Hz / 100 ms ATTITUDE */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_ATTITUDE, 200);
 		/* 5 Hz / 200 ms - TF Changed from 200 */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_NAMED_VALUE_FLOAT, 200000);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_NAMED_VALUE_FLOAT, 20000);
 		/* 5 Hz / 200 ms Changed from 500 */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_SERVO_OUTPUT_RAW, 2000000);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_SERVO_OUTPUT_RAW, 20000); //modified this method so it doesn't impact rate of sending setpoint messages
 		/* 2 Hz - TF Changed from 500 */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_MANUAL_CONTROL, 500000);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_MANUAL_CONTROL, 500);
 		/* 2 Hz TF Changed from 500 */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_GPS_RAW_INT, 500000);
         
@@ -674,6 +674,7 @@ int mavlink_thread_main(int argc, char *argv[])
 				set_hil_on_off(false);
 
 			/* send status (values already copied in the section above) */
+            /* TF - stop sending system status messages not being used
 			mavlink_msg_sys_status_send(chan,
 						    v_status.onboard_control_sensors_present,
 						    v_status.onboard_control_sensors_enabled,
@@ -688,9 +689,11 @@ int mavlink_thread_main(int argc, char *argv[])
 						    v_status.errors_count2,
 						    v_status.errors_count3,
 						    v_status.errors_count4);
+             */
+            
 			lowspeed_counter = 0;
 		}
-
+        
 		lowspeed_counter++;
 
 		mavlink_waypoint_eventloop(mavlink_missionlib_get_system_timestamp(), &global_pos, &local_pos);

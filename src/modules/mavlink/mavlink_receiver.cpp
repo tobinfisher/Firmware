@@ -179,6 +179,7 @@ handle_message(mavlink_message_t *msg)
 		}
 	}
     
+    /*
     if (msg->msgid == MAVLINK_MSG_ID_MANUAL_CONTROL) {
         
         message_counter ++;
@@ -199,13 +200,7 @@ handle_message(mavlink_message_t *msg)
         
         gcs_link = TRUE;
         
-        /*
-         * rate control mode - defined by MAVLink
-         */
-        
         //Values for pitch and roll should be the desired angles in radians
-        //Assuming that we want to pitch/roll a max of 30 degrees, that means the value should vary between +/- .53
-        //The value of man.x and man.y vary by +/- 1000, so we want to scale this by 1886
         offboard_control_sp.p1 = (float)man.x / 1000.0f;
         offboard_control_sp.p2 = (float)man.y / 1000.0f;
         offboard_control_sp.p3 = (float)man.r / 1000.0f;
@@ -218,7 +213,7 @@ handle_message(mavlink_message_t *msg)
         
         offboard_control_sp.timestamp = hrt_absolute_time();
         
-        /* check if topic has to be advertised */
+        // check if topic has to be advertised
         if (offboard_control_sp_pub <= 0) {
             offboard_control_sp_pub = orb_advertise(ORB_ID(offboard_control_setpoint), &offboard_control_sp);
             
@@ -226,110 +221,11 @@ handle_message(mavlink_message_t *msg)
             // Publish
             orb_publish(ORB_ID(offboard_control_setpoint), offboard_control_sp_pub, &offboard_control_sp);
         }
-    }
-    
+    }*/
     
     if (msg->msgid == MAVLINK_MSG_ID_MANUAL_CONTROL) {
         
-        message_counter ++;
-        
-        if (message_counter % 20 == 0) {
-            
-            mavlink_message_t ack_msg;
-            mavlink_command_ack_t ack;
-            ack.command = MAVLINK_MSG_ID_MANUAL_CONTROL;
-            ack.result = MAV_RESULT_ACCEPTED;
-            mavlink_msg_command_ack_encode(mavlink_system.sysid, mavlink_system.compid, &ack_msg, &ack);
-            mavlink_missionlib_send_message(&ack_msg);
-        }
-        
-        
-        mavlink_manual_control_t man;
-        mavlink_msg_manual_control_decode(msg, &man);
-        
-        
-        if (TRUE) {
-            
-            //
-            gcs_link = TRUE;
-            
-            /*
-             * rate control mode - defined by MAVLink
-             */
-            
-            //Values for pitch and roll should be the desired angles in radians
-            //Assuming that we want to pitch/roll a max of 30 degrees, that means the value should vary between +/- .53
-            //The value of man.x and man.y vary by +/- 1000, so we want to scale this by 1886
-            offboard_control_sp.p1 = (float)man.x / 1000.0f;
-            offboard_control_sp.p2 = (float)man.y / 1000.0f;
-            offboard_control_sp.p3 = (float)man.r / 1000.0f;
-            offboard_control_sp.p4 = (float)man.z / 1000.0f;
-            
-            offboard_control_sp.armed = TRUE;
-            //offboard_control_sp.mode = OFFBOARD_CONTROL_MODE_DIRECT_RATES; //only pitches away for unknown reasons
-            //offboard_control_sp.mode = OFFBOARD_CONTROL_MODE_MULTIROTOR_SIMPLE; //no response x 2 tries
-            offboard_control_sp.mode = OFFBOARD_CONTROL_MODE_DIRECT_ATTITUDE;
-            
-            offboard_control_sp.timestamp = hrt_absolute_time();
-            
-            /* check if topic has to be advertised */
-            if (offboard_control_sp_pub <= 0) {
-                offboard_control_sp_pub = orb_advertise(ORB_ID(offboard_control_setpoint), &offboard_control_sp);
-                
-            } else {
-                // Publish
-                orb_publish(ORB_ID(offboard_control_setpoint), offboard_control_sp_pub, &offboard_control_sp);
-            }
-        }
-    
-        
-        else {
-        
-            mavlink_log_info(mavlink_fd, "Got message for rc override");
-            struct rc_channels_s rc_hil;
-            memset(&rc_hil, 0, sizeof(rc_hil));
-            static orb_advert_t rc_pub = 0;
-            
-            rc_hil.timestamp = hrt_absolute_time();
-            rc_hil.chan_count = 4;
-            
-            rc_hil.chan[0].scaled = man.x / 1000.0f;
-            rc_hil.chan[1].scaled = man.y / 1000.0f;
-            rc_hil.chan[2].scaled = man.r / 1000.0f;
-            rc_hil.chan[3].scaled = man.z / 1000.0f;
-            
-            struct manual_control_setpoint_s mc;
-            static orb_advert_t mc_pub = 0;
-            
-            int manual_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
-            
-            //get a copy first, to prevent altering values that are not sent by the mavlink command
-            orb_copy(ORB_ID(manual_control_setpoint), manual_sub, &mc);
-            
-            mc.timestamp = rc_hil.timestamp;
-            mc.roll = man.x / 1000.0f;
-            mc.pitch = man.y / 1000.0f;
-            mc.yaw = man.r / 1000.0f;
-            mc.throttle = man.z / 1000.0f;
-            
-            // fake RC channels with manual control input from simulator
-            if (rc_pub == 0) {
-                rc_pub = orb_advertise(ORB_ID(rc_channels), &rc_hil);
-                
-            } else {
-                orb_publish(ORB_ID(rc_channels), rc_pub, &rc_hil);
-            }
-            
-            if (mc_pub == 0) {
-                mc_pub = orb_advertise(ORB_ID(manual_control_setpoint), &mc);
-                
-            } else {
-                orb_publish(ORB_ID(manual_control_setpoint), mc_pub, &mc);
-            }
-        }
-    }
-    
-    if (msg->msgid == MAVLINK_MSG_ID_MANUAL_CONTROL_SMALL) {
+        gcs_link = TRUE;
         
         message_counter ++;
         
@@ -345,38 +241,50 @@ handle_message(mavlink_message_t *msg)
             mavlink_missionlib_send_message(&ack_msg);
         }
         
+        mavlink_manual_control_t man;
+        mavlink_msg_manual_control_decode(msg, &man);
         
-        mavlink_manual_control_small_t man;
-        mavlink_msg_manual_control_small_decode(msg, &man);
         
-        gcs_link = TRUE;
+        struct rc_channels_s rc_man;
+        memset(&rc_man, 0, sizeof(rc_man));
+        static orb_advert_t rc_pub = 0;
         
-        /*
-         * rate control mode - defined by MAVLink
-         */
+        rc_man.timestamp = hrt_absolute_time();
+        rc_man.chan_count = 4;
         
-        //Values for pitch and roll should be the desired angles in radians
-        //Assuming that we want to pitch/roll a max of 30 degrees, that means the value should vary between +/- .53
-        //The value of man.x and man.y vary by +/- 1000, so we want to scale this by 1886
-        offboard_control_sp.p1 = (float)man.x / 1000.0f;
-        offboard_control_sp.p2 = (float)man.y / 1000.0f;
-        offboard_control_sp.p3 = (float)man.r / 1000.0f;
-        offboard_control_sp.p4 = (float)man.z / 1000.0f;
+        rc_man.chan[0].scaled = man.x / 1000.0f;
+        rc_man.chan[1].scaled = man.y / 1000.0f;
+        rc_man.chan[2].scaled = man.r / 1000.0f;
+        rc_man.chan[3].scaled = man.z / 1000.0f;
         
-        offboard_control_sp.armed = TRUE;
-        //offboard_control_sp.mode = OFFBOARD_CONTROL_MODE_DIRECT_RATES; //only pitches away for unknown reasons
-        //offboard_control_sp.mode = OFFBOARD_CONTROL_MODE_MULTIROTOR_SIMPLE; //no response x 2 tries
-        offboard_control_sp.mode = OFFBOARD_CONTROL_MODE_DIRECT_ATTITUDE;
+        struct manual_control_setpoint_s mc;
+        static orb_advert_t mc_pub = 0;
         
-        offboard_control_sp.timestamp = hrt_absolute_time();
+        int manual_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
         
-        /* check if topic has to be advertised */
-        if (offboard_control_sp_pub <= 0) {
-            offboard_control_sp_pub = orb_advertise(ORB_ID(offboard_control_setpoint), &offboard_control_sp);
+        /* get a copy first, to prevent altering values that are not sent by the mavlink command */
+        orb_copy(ORB_ID(manual_control_setpoint), manual_sub, &mc);
+        
+        mc.timestamp = rc_man.timestamp;
+        mc.roll = man.x / 1000.0f;
+        mc.pitch = man.y / 1000.0f;
+        mc.yaw = man.r / 1000.0f;
+        mc.throttle = man.z / 1000.0f;
+        
+        // fake RC channels with manual control input
+        
+        if (rc_pub == 0) {
+            rc_pub = orb_advertise(ORB_ID(rc_channels), &rc_man);
             
         } else {
-            // Publish
-            orb_publish(ORB_ID(offboard_control_setpoint), offboard_control_sp_pub, &offboard_control_sp);
+            orb_publish(ORB_ID(rc_channels), rc_pub, &rc_man);
+        }
+        
+        if (mc_pub == 0) {
+            mc_pub = orb_advertise(ORB_ID(manual_control_setpoint), &mc);
+            
+        } else {
+            orb_publish(ORB_ID(manual_control_setpoint), mc_pub, &mc);
         }
     }
 
@@ -546,14 +454,14 @@ handle_message(mavlink_message_t *msg)
 	}
 
 	/* handle status updates of the radio */
-	if (msg->msgid == MAVLINK_MSG_ID_RADIO_STATUS) {
+	/*if (msg->msgid == MAVLINK_MSG_ID_RADIO_STATUS) {
 
 		struct telemetry_status_s tstatus;
 
 		mavlink_radio_status_t rstatus;
 		mavlink_msg_radio_status_decode(msg, &rstatus);
 
-		/* publish telemetry status topic */
+		//publish telemetry status topic
 		tstatus.timestamp = hrt_absolute_time();
 		tstatus.type = TELEMETRY_STATUS_RADIO_TYPE_3DR_RADIO;
 		tstatus.rssi = rstatus.rssi;
@@ -578,7 +486,7 @@ handle_message(mavlink_message_t *msg)
 		} else {
 			orb_publish(ORB_ID(telemetry_status), telemetry_status_pub, &tstatus);
 		}
-	}
+	}*/
 
 	/*
 	 * Only decode hil messages in HIL mode.

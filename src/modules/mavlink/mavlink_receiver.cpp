@@ -252,10 +252,12 @@ handle_message(mavlink_message_t *msg)
         rc_man.timestamp = hrt_absolute_time();
         rc_man.chan_count = 4;
         
-        rc_man.chan[0].scaled = man.x / 1000.0f;
-        rc_man.chan[1].scaled = man.y / 1000.0f;
-        rc_man.chan[2].scaled = man.r / 1000.0f;
-        rc_man.chan[3].scaled = man.z / 1000.0f;
+        rc_man.chan[0].scaled = (float)man.x / 1000.0f;
+        rc_man.chan[1].scaled = (float)man.y / 1000.0f;
+        rc_man.chan[2].scaled = (float)man.r / 1000.0f;
+        rc_man.chan[3].scaled = (float)man.z / 1000.0f;
+        rc_man.chan[4].scaled = 0;
+        rc_man.chan[5].scaled = 0;
         
         struct manual_control_setpoint_s mc;
         static orb_advert_t mc_pub = 0;
@@ -266,10 +268,10 @@ handle_message(mavlink_message_t *msg)
         orb_copy(ORB_ID(manual_control_setpoint), manual_sub, &mc);
         
         mc.timestamp = rc_man.timestamp;
-        mc.roll = man.x / 1000.0f;
-        mc.pitch = man.y / 1000.0f;
-        mc.yaw = man.r / 1000.0f;
-        mc.throttle = man.z / 1000.0f;
+        mc.roll = (float)man.x / 1000.0f;
+        mc.pitch = (float)man.y / 1000.0f;
+        mc.yaw = (float)man.r / 1000.0f;
+        mc.throttle = (float)man.z / 1000.0f;
         
         // fake RC channels with manual control input
         

@@ -74,8 +74,11 @@
 #include <systemlib/systemlib.h>
 #include <systemlib/param/param.h>
 
+#include <mavlink/mavlink_log.h>
+
 #include "multirotor_attitude_control.h"
 #include "multirotor_rate_control.h"
+
 
 __EXPORT int multirotor_att_control_main(int argc, char *argv[]);
 
@@ -84,6 +87,7 @@ static int mc_task;
 static bool motor_test_mode = false;
 static const float min_takeoff_throttle = 0.3f;
 static const float yaw_deadzone = 0.01f;
+static int mavlink_fd = 0;
 
 static int
 mc_thread_main(int argc, char *argv[])
@@ -152,6 +156,8 @@ mc_thread_main(int argc, char *argv[])
 	/* store last control mode to detect mode switches */
 	bool control_yaw_position = true;
 	bool reset_yaw_sp = true;
+    
+    if (mavlink_fd == 0) mavlink_fd = open(MAVLINK_LOG_DEVICE, 0);
 
 	while (!thread_should_exit) {
 
@@ -220,7 +226,7 @@ mc_thread_main(int argc, char *argv[])
 				}
 
 				/* define which input is the dominating control input */
-				if (control_mode.flag_control_offboard_enabled) {
+				if (FALSE /*control_mode.flag_control_offboard_enabled*/) {
 					/* offboard inputs */
 					if (offboard_sp.mode == OFFBOARD_CONTROL_MODE_DIRECT_RATES) {
 						rates_sp.roll = offboard_sp.p1;
@@ -245,8 +251,11 @@ mc_thread_main(int argc, char *argv[])
 
 				} else if (control_mode.flag_control_manual_enabled) {
 					/* manual input */
+                    //mavlink_log_info(mavlink_fd, "Att control 1");
 					if (control_mode.flag_control_attitude_enabled) {
 						/* control attitude, update attitude setpoint depending on mode */
+                        //mavlink_log_info(mavlink_fd, "Att control 2");
+                        
 						if (att_sp.thrust < 0.1f) {
 							/* no thrust, don't try to control yaw */
 							rates_sp.yaw = 0.0f;
@@ -274,6 +283,7 @@ mc_thread_main(int argc, char *argv[])
 							/* update attitude setpoint if not in position control mode */
 							att_sp.roll_body = manual.roll;
 							att_sp.pitch_body = manual.pitch;
+                            //mavlink_log_info(mavlink_fd, "Att control 3");
 
 							if (!control_mode.flag_control_climb_rate_enabled) {
 								/* pass throttle directly if not in altitude control mode */

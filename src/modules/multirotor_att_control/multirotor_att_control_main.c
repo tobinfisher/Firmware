@@ -226,7 +226,7 @@ mc_thread_main(int argc, char *argv[])
 				}
 
 				/* define which input is the dominating control input */
-				if (FALSE /*control_mode.flag_control_offboard_enabled*/) {
+				if (control_mode.flag_control_offboard_enabled) {
 					/* offboard inputs */
 					if (offboard_sp.mode == OFFBOARD_CONTROL_MODE_DIRECT_RATES) {
 						rates_sp.roll = offboard_sp.p1;
@@ -306,6 +306,13 @@ mc_thread_main(int argc, char *argv[])
 						}
 
 						att_sp.timestamp = hrt_absolute_time();
+                        
+                        if (status.rc_signal_lost) {
+                            mavlink_log_info(mavlink_fd, "Going to failsafe throttle");
+                            att_sp.thrust = 0;
+                            att_sp.roll_body = 0;
+                            att_sp.pitch_body = 0;
+                        }
 
 						/* publish the attitude setpoint */
 						orb_publish(ORB_ID(vehicle_attitude_setpoint), att_sp_pub, &att_sp);

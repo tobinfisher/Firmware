@@ -567,7 +567,7 @@ int commander_thread_main(int argc, char *argv[])
 	status.condition_system_sensors_initialized = true;
 
 	// XXX just disable offboard control for now
-	control_mode.flag_control_offboard_enabled = TRUE; //TF - changed from FALSE
+	control_mode.flag_control_offboard_enabled = FALSE; //TF - changed from FALSE
 
 	/* advertise to ORB */
 	status_pub = orb_advertise(ORB_ID(vehicle_status), &status);

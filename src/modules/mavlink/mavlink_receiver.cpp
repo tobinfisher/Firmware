@@ -253,6 +253,56 @@ handle_message(mavlink_message_t *msg)
         mavlink_manual_control_t man;
         mavlink_msg_manual_control_decode(msg, &man);
         
+        /*
+         * rate control mode - defined by MAVLink
+         */
+        
+        //Values for pitch and roll should be the desired angles in radians
+        //Assuming that we want to pitch/roll a max of 30 degrees, that means the value should vary between +/- .53
+        //The value of man.x and man.y vary by +/- 1000, so we want to scale this by 1886
+        offboard_control_sp.p1 = (float)man.x / 1000.0f;
+        offboard_control_sp.p2 = (float)man.y / 1000.0f;
+        offboard_control_sp.p3 = (float)man.r / 1000.0f;
+        offboard_control_sp.p4 = (float)man.z / 1000.0f;
+        
+        offboard_control_sp.armed = TRUE;
+        //offboard_control_sp.mode = OFFBOARD_CONTROL_MODE_DIRECT_RATES; //only pitches away for unknown reasons
+        //offboard_control_sp.mode = OFFBOARD_CONTROL_MODE_MULTIROTOR_SIMPLE; //no response x 2 tries
+        offboard_control_sp.mode = OFFBOARD_CONTROL_MODE_DIRECT_ATTITUDE;
+        
+        offboard_control_sp.timestamp = hrt_absolute_time();
+        
+        /* check if topic has to be advertised */
+        if (offboard_control_sp_pub <= 0) {
+            offboard_control_sp_pub = orb_advertise(ORB_ID(offboard_control_setpoint), &offboard_control_sp);
+            
+        } else {
+            // Publish
+            orb_publish(ORB_ID(offboard_control_setpoint), offboard_control_sp_pub, &offboard_control_sp);
+        }
+}
+    
+  /*
+    if (msg->msgid == MAVLINK_MSG_ID_MANUAL_CONTROL) {
+        
+        gcs_link = TRUE;
+        
+        message_counter ++;
+        
+        if (message_counter % 20 == 0) {
+            
+            //mavlink_log_info(mavlink_fd, "ACK1");
+            
+            mavlink_message_t ack_msg;
+            mavlink_command_ack_t ack;
+            ack.command = MAVLINK_MSG_ID_MANUAL_CONTROL;
+            ack.result = MAV_RESULT_ACCEPTED;
+            mavlink_msg_command_ack_encode(mavlink_system.sysid, mavlink_system.compid, &ack_msg, &ack);
+            mavlink_missionlib_send_message(&ack_msg);
+        }
+        
+        mavlink_manual_control_t man;
+        mavlink_msg_manual_control_decode(msg, &man);
         
         struct rc_channels_s rc_man;
         memset(&rc_man, 0, sizeof(rc_man));
@@ -273,8 +323,14 @@ handle_message(mavlink_message_t *msg)
         
         int manual_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
         
-        /* get a copy first, to prevent altering values that are not sent by the mavlink command */
+        // get a copy first, to prevent altering values that are not sent by the mavlink command
         orb_copy(ORB_ID(manual_control_setpoint), manual_sub, &mc);
+        
+        //for these switches, NAN means unset
+        mc.mode_switch = NAN;
+        mc.return_switch = NAN;
+        mc.assisted_switch = NAN;
+        mc.mission_switch = NAN;
         
         mc.timestamp = rc_man.timestamp;
         mc.roll = (float)man.x / 1000.0f;
@@ -298,7 +354,7 @@ handle_message(mavlink_message_t *msg)
             orb_publish(ORB_ID(manual_control_setpoint), mc_pub, &mc);
         }
     }
-
+*/
 
 	if (msg->msgid == MAVLINK_MSG_ID_OPTICAL_FLOW) {
 		mavlink_optical_flow_t flow;

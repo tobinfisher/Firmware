@@ -210,7 +210,12 @@ struct vehicle_status_s
 	bool offboard_control_signal_found_once;
 	bool offboard_control_signal_lost;
 	bool offboard_control_signal_weak;
-	uint64_t offboard_control_signal_lost_interval;	/**< interval in microseconds without an offboard control message */
+	uint64_t   offboard_control_last_timestamp; /**< Todd last time we received a manual control message: reset to zero when lost */
+    
+    bool manual_control_signal_found_once;
+	bool manual_control_signal_lost;
+	bool manual_control_signal_weak;
+	uint64_t manual_control_last_timestamp;	/**< interval in microseconds without a manual control message */
 
 	/* see SYS_STATUS mavlink message for the following */
 	uint32_t onboard_control_sensors_present;

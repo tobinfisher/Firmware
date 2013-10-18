@@ -124,6 +124,8 @@ extern struct system_load_s system_load;
 #define POSITION_TIMEOUT 1000000 /**< consider the local or global position estimate invalid after 1s */
 #define RC_TIMEOUT 1000000 //100000  //TF changed
 #define DIFFPRESS_TIMEOUT 2000000
+#define MANUAL_CTRL_TIMEOUT 500000 //Todd addition
+#define OFFBOARD_CTRL_TIMEOUT 500000 //TF addition
 
 #define PRINT_INTERVAL	5000000
 #define PRINT_MODE_REJECT_INTERVAL	2000000
@@ -610,10 +612,12 @@ int commander_thread_main(int argc, char *argv[])
 	/* neither manual nor offboard control commands have been received */
 	status.offboard_control_signal_found_once = false;
 	status.rc_signal_found_once = false;
+    status.manual_control_signal_found_once = false; //**TF added
 
 	/* mark all signals lost as long as they haven't been found */
 	status.rc_signal_lost = true;
 	status.offboard_control_signal_lost = true;
+    status.manual_control_signal_lost = TRUE;
 
 	/* allow manual override initially */
 	control_mode.flag_external_manual_override_ok = true;
@@ -626,7 +630,7 @@ int commander_thread_main(int argc, char *argv[])
 	status.condition_system_sensors_initialized = true;
 
 	// XXX just disable offboard control for now
-	control_mode.flag_control_offboard_enabled = FALSE; //TF - changed from FALSE
+	control_mode.flag_control_offboard_enabled = FALSE;
 
 	/* advertise to ORB */
 	status_pub = orb_advertise(ORB_ID(vehicle_status), &status);
@@ -810,16 +814,76 @@ int commander_thread_main(int argc, char *argv[])
 		}
 
 		orb_check(sp_man_sub, &updated);
-
-		if (updated) {
+        
+        //Todd's code
+        if (updated) {
 			orb_copy(ORB_ID(manual_control_setpoint), sp_man_sub, &sp_man);
+            
+			if (!status.manual_control_signal_found_once) {
+				mavlink_log_critical(mavlink_fd, "[cmd] detected manual control signal first time");
+				status_changed = true;
+                
+			} else if (status.manual_control_signal_lost) {
+				mavlink_log_critical(mavlink_fd, "[cmd] manual control signal regained");
+				status_changed = true;
+			}
+            
+			status.manual_control_signal_found_once = true;
+			status.manual_control_signal_lost = false;
+            
+			status.manual_control_last_timestamp = hrt_absolute_time();
+            
+		} else if (status.manual_control_signal_found_once &&
+                   (0 != status.manual_control_last_timestamp))  {
+			// determine whether we had and then lost manual signal
+			int32_t deltaT = (hrt_absolute_time() - status.manual_control_last_timestamp);
+            
+			if (deltaT > MANUAL_CTRL_TIMEOUT) {
+				status.manual_control_signal_lost = true;
+				mavlink_log_critical(mavlink_fd, "[cmd] manual control signal lost after %d", deltaT);
+				status_changed = true;
+				status.manual_control_last_timestamp = 0;//ensure we only lose signal once before regaining
+			}
 		}
+        
+        //end Todd code
 
 		orb_check(sp_offboard_sub, &updated);
-
-		if (updated) {
+        
+        //TF added
+        if (updated) {
+            
+            control_mode.flag_control_offboard_enabled = TRUE;
+            
 			orb_copy(ORB_ID(offboard_control_setpoint), sp_offboard_sub, &sp_offboard);
+            
+			if (!status.offboard_control_signal_found_once) {
+				mavlink_log_critical(mavlink_fd, "[cmd] detected offboard control signal first time");
+				status_changed = true;
+                
+			} else if (status.offboard_control_signal_lost) {
+				mavlink_log_critical(mavlink_fd, "[cmd] offboard control signal regained");
+				status_changed = true;
+			}
+            
+			status.offboard_control_signal_found_once = true;
+			status.offboard_control_signal_lost = false;
+            
+			status.offboard_control_last_timestamp = hrt_absolute_time();
+            
+		} else if (status.offboard_control_signal_found_once &&
+                   (0 != status.offboard_control_last_timestamp))  {
+			// determine whether we had and then lost manual signal
+			int32_t deltaT = (hrt_absolute_time() - status.offboard_control_last_timestamp);
+            
+			if (deltaT > OFFBOARD_CTRL_TIMEOUT) {
+				status.offboard_control_signal_lost = true;
+				mavlink_log_critical(mavlink_fd, "[cmd] offboard control signal lost after %d", deltaT);
+				status_changed = true;
+				status.offboard_control_last_timestamp = 0;//ensure we only lose signal once before regaining
+			}
 		}
+        // end TF added
 
 		orb_check(sensor_sub, &updated);
 
@@ -1058,8 +1122,8 @@ int commander_thread_main(int argc, char *argv[])
 			}
 		}
 
-		/* ignore RC signals if in offboard control mode */
-		if (!status.offboard_control_signal_found_once && sp_man.timestamp != 0) {
+		/* ignore RC signals if in offboard control mode TF - or manual control mode -TF */
+		if (!status.offboard_control_signal_found_once && !status.manual_control_signal_found_once && sp_man.timestamp != 0) {
 			// start RC input check
 			if (hrt_absolute_time() < sp_man.timestamp + RC_TIMEOUT) {
 				// handle the case where RC signal was regained
@@ -1166,112 +1230,6 @@ int commander_thread_main(int argc, char *argv[])
 				}
 			}
 		}
-        
-        /* State machine update for offboard control */
-        /*
-		if (!status.rc_signal_found_once && sp_offboard.timestamp != 0) {
-            
-            //mavlink_log_info(mavlink_fd, "Inside offboard control conditional");
-            
-			if ((hrt_absolute_time() - sp_offboard.timestamp) < 3000000) {
-         
-                //mavlink_log_info(mavlink_fd, "Offboard control current");
-				// decide about attitude control flag, enable in att/pos/vel
-				bool attitude_ctrl_enabled = (sp_offboard.mode == OFFBOARD_CONTROL_MODE_DIRECT_ATTITUDE ||
-                                              sp_offboard.mode == OFFBOARD_CONTROL_MODE_DIRECT_VELOCITY ||
-                                              sp_offboard.mode == OFFBOARD_CONTROL_MODE_DIRECT_POSITION);
-                
-				//decide about rate control flag, enable it always XXX (for now)
-				bool rates_ctrl_enabled = true;
-                
-				// set up control mode
-				//if (status.flag_control_attitude_enabled != attitude_ctrl_enabled) {
-				//	status.flag_control_attitude_enabled = attitude_ctrl_enabled;
-				//	status_changed = true;
-				//}
-                
-				//if (status.flag_control_rates_enabled != rates_ctrl_enabled) {
-				//	status.flag_control_rates_enabled = rates_ctrl_enabled;
-				//	status_changed = true;
-				//}
-                
-				// handle the case where offboard control signal was regained
-				if (!status.offboard_control_signal_found_once) {
-					status.offboard_control_signal_found_once = true;
-					// enable offboard control, disable manual input
-					//status.flag_control_manual_enabled = false;
-					//status.flag_control_offboard_enabled = true;
-					status_changed = true;
-					//tune_confirm();
-                    
-					mavlink_log_critical(mavlink_fd, "DETECTED OFFBOARD SIGNAL FIRST");
-                    
-				} else {
-					if (status.offboard_control_signal_lost) {
-						mavlink_log_critical(mavlink_fd, "RECOVERY OFFBOARD CONTROL");
-						status_changed = true;
-						//tune_confirm();
-					}
-				}
-                
-				status.offboard_control_signal_weak = false;
-				status.offboard_control_signal_lost = false;
-				status.offboard_control_signal_lost_interval = 0;
-             
-				// arm / disarm on request
-				//if (sp_offboard.armed && !status.flag_system_armed) {
-				//	update_state_machine_arm(stat_pub, &status, mavlink_fd);
-					// switch to stabilized mode = takeoff
-				//	update_state_machine_mode_stabilized(stat_pub, &status, mavlink_fd);
-                    
-				//} else if (!sp_offboard.armed && status.flag_system_armed) {
-				//	update_state_machine_disarm(stat_pub, &status, mavlink_fd);
-				//}
-                
-			} else {
-                
-                mavlink_log_info(mavlink_fd, "Offboard control potentially lost");
-                
-                //TF added
-                status.offboard_control_signal_lost = true;
-                status_changed = true;
-                //tune_confirm();
-                
-                //current_status.failsave_lowlevel = true;
-                
-         
-                 //static uint64_t last_print_time = 0;
-                 
-                 // print error message for first RC glitch and then every 5 s / 5000 ms)
-                // if (!current_status.offboard_control_signal_weak || ((hrt_absolute_time() - last_print_time) > 5000000)) {
-                 //current_status.offboard_control_signal_weak = true;
-                 //mavlink_log_critical(mavlink_fd, "CRIT:NO OFFBOARD CONTROL!");
-                 //last_print_time = hrt_absolute_time();
-                 //}
-         
-                 // flag as lost and update interval since when the signal was lost (to initiate RTL after some time)
-				status.offboard_control_signal_lost_interval = hrt_absolute_time() - sp_offboard.timestamp;
-                
-				//if the signal is gone for 0.1 seconds, consider it lost
-                 //if (current_status.offboard_control_signal_lost_interval > 100000) {
-                 
-                 //mavlink_log_info(mavlink_fd, "Offboard control definitely lost");
-                 
-                 //current_status.offboard_control_signal_lost = true;
-                 //current_status.failsave_lowlevel_start_time = hrt_absolute_time();
-                 //tune_confirm();
-                 
-                 // kill motors after timeout 
-                 //if (hrt_absolute_time() - current_status.failsave_lowlevel_start_time > failsafe_lowlevel_timeout_ms * 1000) {
-                 //current_status.failsave_lowlevel = true;
-                 //state_changed = true;
-                 //}
-                 //}
-         
-			}
-		}
-         */
-
 
 		/* handle commands last, as the system needs to be updated to handle them */
 		orb_check(cmd_sub, &updated);
@@ -1687,9 +1645,10 @@ check_navigation_state_machine(struct vehicle_status_s *status, struct vehicle_c
 
 	} else {
 		/* manual control modes */
-		if (status->rc_signal_lost && (status->arming_state == ARMING_STATE_ARMED || status->arming_state == ARMING_STATE_ARMED_ERROR)) {
+		if ((status->rc_signal_lost && status->manual_control_signal_lost && status->offboard_control_signal_lost) && (status->arming_state == ARMING_STATE_ARMED || status->arming_state == ARMING_STATE_ARMED_ERROR)) {
 			/* switch to failsafe mode */
 			bool manual_control_old = control_mode->flag_control_manual_enabled;
+            bool offboard_control_old = control_mode->flag_control_offboard_enabled; //TF added
 
 			if (!status->condition_landed) {
 				/* in air: try to hold position */
@@ -1704,9 +1663,10 @@ check_navigation_state_machine(struct vehicle_status_s *status, struct vehicle_c
 				res = navigation_state_transition(status, NAVIGATION_STATE_ALTHOLD, control_mode);
 			}
 
-			control_mode->flag_control_manual_enabled = false;
+			control_mode->flag_control_manual_enabled = false;  //Why is this here?
+            control_mode->flag_control_offboard_enabled = false;
 
-			if (res == TRANSITION_NOT_CHANGED && manual_control_old) {
+			if (res == TRANSITION_NOT_CHANGED && (manual_control_old || offboard_control_old)) {
 				/* mark navigation state as changed to force immediate flag publishing */
 				set_navigation_state_changed();
 				res = TRANSITION_CHANGED;

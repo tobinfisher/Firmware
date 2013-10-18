@@ -7,50 +7,14 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		349E6B1917DE7BE700944AF8 /* .DS_Store */ = {isa = PBXFileReference; lastKnownFileType = file; path = .DS_Store; sourceTree = "<group>"; };
-		349E6B1A17DE7BE700944AF8 /* .git */ = {isa = PBXFileReference; lastKnownFileType = folder; path = .git; sourceTree = "<group>"; };
-		349E6B1B17DE7BE700944AF8 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
-		349E6B1C17DE7BE700944AF8 /* Archives */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Archives; sourceTree = "<group>"; };
-		349E6B1D17DE7BE700944AF8 /* Build */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Build; sourceTree = "<group>"; };
-		349E6B1E17DE7BE700944AF8 /* Debug */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Debug; sourceTree = "<group>"; };
-		349E6B1F17DE7BE700944AF8 /* Documentation */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Documentation; sourceTree = "<group>"; };
-		349E6B2017DE7BE700944AF8 /* Firmware.sublime-project */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Firmware.sublime-project"; sourceTree = "<group>"; };
-		349E6B2117DE7BE700944AF8 /* Images */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Images; sourceTree = "<group>"; };
-		349E6B2217DE7BE700944AF8 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
-		349E6B2317DE7BE700944AF8 /* makefiles */ = {isa = PBXFileReference; lastKnownFileType = folder; path = makefiles; sourceTree = "<group>"; };
-		349E6B2417DE7BE700944AF8 /* mavlink */ = {isa = PBXFileReference; lastKnownFileType = folder; path = mavlink; sourceTree = "<group>"; };
-		349E6B2517DE7BE700944AF8 /* misc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = misc; sourceTree = "<group>"; };
-		349E6B2617DE7BE700944AF8 /* NuttX */ = {isa = PBXFileReference; lastKnownFileType = folder; path = NuttX; sourceTree = "<group>"; };
-		349E6B2717DE7BE700944AF8 /* nuttx-configs */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "nuttx-configs"; sourceTree = "<group>"; };
-		349E6B2817DE7BE700944AF8 /* platforms */ = {isa = PBXFileReference; lastKnownFileType = folder; path = platforms; sourceTree = "<group>"; };
-		349E6B2917DE7BE700944AF8 /* ROMFS */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ROMFS; sourceTree = "<group>"; };
 		349E6B2A17DE7BE700944AF8 /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; path = src; sourceTree = "<group>"; };
-		349E6B2B17DE7BE700944AF8 /* Tools */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Tools; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
 		349E6B1317DE7BE700944AF8 = {
 			isa = PBXGroup;
 			children = (
-				349E6B1917DE7BE700944AF8 /* .DS_Store */,
-				349E6B1A17DE7BE700944AF8 /* .git */,
-				349E6B1B17DE7BE700944AF8 /* .gitignore */,
-				349E6B1C17DE7BE700944AF8 /* Archives */,
-				349E6B1D17DE7BE700944AF8 /* Build */,
-				349E6B1E17DE7BE700944AF8 /* Debug */,
-				349E6B1F17DE7BE700944AF8 /* Documentation */,
-				349E6B2017DE7BE700944AF8 /* Firmware.sublime-project */,
-				349E6B2117DE7BE700944AF8 /* Images */,
-				349E6B2217DE7BE700944AF8 /* Makefile */,
-				349E6B2317DE7BE700944AF8 /* makefiles */,
-				349E6B2417DE7BE700944AF8 /* mavlink */,
-				349E6B2517DE7BE700944AF8 /* misc */,
-				349E6B2617DE7BE700944AF8 /* NuttX */,
-				349E6B2717DE7BE700944AF8 /* nuttx-configs */,
-				349E6B2817DE7BE700944AF8 /* platforms */,
-				349E6B2917DE7BE700944AF8 /* ROMFS */,
 				349E6B2A17DE7BE700944AF8 /* src */,
-				349E6B2B17DE7BE700944AF8 /* Tools */,
 			);
 			sourceTree = "<group>";
 		};

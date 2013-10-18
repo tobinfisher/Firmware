@@ -92,7 +92,11 @@ static int mavlink_fd = 0;
 static int
 mc_thread_main(int argc, char *argv[])
 {
-	/* declare and safely initialize all structs */
+	
+    mavlink_fd = open(MAVLINK_LOG_DEVICE, 0);
+	mavlink_log_info(mavlink_fd, "[mac] started");
+    
+    /* declare and safely initialize all structs */
 	struct vehicle_attitude_s att;
 	memset(&att, 0, sizeof(att));
 	struct vehicle_attitude_setpoint_s att_sp;
@@ -225,6 +229,24 @@ mc_thread_main(int argc, char *argv[])
 			if (!control_mode.flag_armed) {
 				reset_yaw_sp = true;
 			}
+            
+            
+            //Manual control flag is currently NOT enabled
+            //if (control_mode.flag_control_manual_enabled) {mavlink_log_info(mavlink_fd, "[mac] flag_control_manual_enabled");}
+            //else {mavlink_log_info(mavlink_fd, "[mac] flag_control_manual NOT enabled")};
+            
+            
+            /*
+             Velocity control NOT enabled
+            if (control_mode.flag_control_velocity_enabled) {mavlink_log_info(mavlink_fd, "[mac] flag_control_velocity_enabled");}
+            else {mavlink_log_info(mavlink_fd, "[mac] flag_control_velocity NOT enabled");}
+            */
+            
+            /*
+            Climb rate control IS enabled
+            if (control_mode.flag_control_climb_rate_enabled) {mavlink_log_info(mavlink_fd, "[mac] flag_control_climb_rate_enabled");}
+            else {mavlink_log_info(mavlink_fd, "[mac] flag_control_climb_rate NOT enabled");}
+             */
 
 			/* define which input is the dominating control input */
 			if (control_mode.flag_control_offboard_enabled) {
@@ -250,7 +272,7 @@ mc_thread_main(int argc, char *argv[])
 				/* reset yaw setpoint after offboard control */
 				reset_yaw_sp = true;
 
-			} else if (control_mode.flag_control_manual_enabled) {
+			} else if (/*TRUE ||*/ control_mode.flag_control_manual_enabled) { //Needs to be true for man control to work
 				/* manual input */
 				if (control_mode.flag_control_attitude_enabled) {
 					/* control attitude, update attitude setpoint depending on mode */
@@ -282,7 +304,7 @@ mc_thread_main(int argc, char *argv[])
 						att_sp.roll_body = manual.roll;
 						att_sp.pitch_body = manual.pitch;
 
-						if (!control_mode.flag_control_climb_rate_enabled) {
+						if (/*TRUE ||*/ !control_mode.flag_control_climb_rate_enabled) {
 							/* pass throttle directly if not in altitude control mode */
 							att_sp.thrust = manual.throttle;
 						}

@@ -43,6 +43,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include <fcntl.h>
+
 #include <uORB/uORB.h>
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/actuator_controls.h>
@@ -65,6 +67,8 @@ static const int ERROR = -1;
 static bool arming_state_changed = true;
 static bool main_state_changed = true;
 static bool navigation_state_changed = true;
+
+static int mavlink_fd2 = 0;
 
 transition_result_t
 arming_state_transition(struct vehicle_status_s *status, const struct safety_s *safety,
@@ -297,6 +301,8 @@ navigation_state_transition(struct vehicle_status_s *status, navigation_state_t 
 		ret = TRANSITION_NOT_CHANGED;
 
 	} else {
+        
+        if (mavlink_fd2 == 0) {mavlink_fd2 = open(MAVLINK_LOG_DEVICE, 0);}
 
 		switch (new_navigation_state) {
 		case NAVIGATION_STATE_DIRECT:
@@ -309,6 +315,7 @@ navigation_state_transition(struct vehicle_status_s *status, navigation_state_t 
 			control_mode->flag_control_climb_rate_enabled = false;
 			control_mode->flag_control_manual_enabled = true;
 			control_mode->flag_control_auto_enabled = false;
+            mavlink_log_info(mavlink_fd2, "[SM] NAV STATE direct");
 			break;
 
 		case NAVIGATION_STATE_STABILIZE:
@@ -321,6 +328,7 @@ navigation_state_transition(struct vehicle_status_s *status, navigation_state_t 
 			control_mode->flag_control_climb_rate_enabled = false; 
 			control_mode->flag_control_manual_enabled = true;
 			control_mode->flag_control_auto_enabled = false;
+            mavlink_log_info(mavlink_fd2, "[SM] NAV STATE stabilize");
 			break;
 
 		case NAVIGATION_STATE_ALTHOLD:
@@ -333,6 +341,7 @@ navigation_state_transition(struct vehicle_status_s *status, navigation_state_t 
 			control_mode->flag_control_climb_rate_enabled = true;
 			control_mode->flag_control_manual_enabled = true;
 			control_mode->flag_control_auto_enabled = false;
+            mavlink_log_info(mavlink_fd2, "[SM] NAV STATE althold");
 			break;
 
 		case NAVIGATION_STATE_VECTOR:
@@ -345,6 +354,7 @@ navigation_state_transition(struct vehicle_status_s *status, navigation_state_t 
 			control_mode->flag_control_climb_rate_enabled = true;
 			control_mode->flag_control_manual_enabled = true;
 			control_mode->flag_control_auto_enabled = false;
+            mavlink_log_info(mavlink_fd2, "[SM] NAV STATE vector");
 			break;
 
 		case NAVIGATION_STATE_AUTO_READY:
@@ -357,6 +367,7 @@ navigation_state_transition(struct vehicle_status_s *status, navigation_state_t 
 			control_mode->flag_control_climb_rate_enabled = false;
 			control_mode->flag_control_manual_enabled = false;
 			control_mode->flag_control_auto_enabled = true;
+            mavlink_log_info(mavlink_fd2, "[SM] NAV STATE auto ready");
 			break;
 
 		case NAVIGATION_STATE_AUTO_TAKEOFF:
@@ -369,6 +380,7 @@ navigation_state_transition(struct vehicle_status_s *status, navigation_state_t 
 			control_mode->flag_control_climb_rate_enabled = true;
 			control_mode->flag_control_manual_enabled = false;
 			control_mode->flag_control_auto_enabled = true;
+            mavlink_log_info(mavlink_fd2, "[SM] NAV STATE takeoff");
 			break;
 
 		case NAVIGATION_STATE_AUTO_LOITER:
@@ -381,6 +393,7 @@ navigation_state_transition(struct vehicle_status_s *status, navigation_state_t 
 			control_mode->flag_control_climb_rate_enabled = true;
 			control_mode->flag_control_manual_enabled = false;
 			control_mode->flag_control_auto_enabled = false;
+            mavlink_log_info(mavlink_fd2, "[SM] NAV STATE auto loiter");
 			break;
 
 		case NAVIGATION_STATE_AUTO_MISSION:
@@ -393,6 +406,7 @@ navigation_state_transition(struct vehicle_status_s *status, navigation_state_t 
 			control_mode->flag_control_climb_rate_enabled = true;
 			control_mode->flag_control_manual_enabled = false;
 			control_mode->flag_control_auto_enabled = true;
+            mavlink_log_info(mavlink_fd2, "[SM] NAV STATE auto mission");
 			break;
 
 		case NAVIGATION_STATE_AUTO_RTL:
@@ -405,6 +419,7 @@ navigation_state_transition(struct vehicle_status_s *status, navigation_state_t 
 			control_mode->flag_control_climb_rate_enabled = true;
 			control_mode->flag_control_manual_enabled = false;
 			control_mode->flag_control_auto_enabled = true;
+            mavlink_log_info(mavlink_fd2, "[SM] NAV STATE auto RTL");
 			break;
 
 		case NAVIGATION_STATE_AUTO_LAND:
@@ -420,6 +435,7 @@ navigation_state_transition(struct vehicle_status_s *status, navigation_state_t 
 				control_mode->flag_control_climb_rate_enabled = true;
 				control_mode->flag_control_manual_enabled = false;
 				control_mode->flag_control_auto_enabled = true;
+                mavlink_log_info(mavlink_fd2, "[SM] NAV STATE auto land");
 			}
 
 			break;

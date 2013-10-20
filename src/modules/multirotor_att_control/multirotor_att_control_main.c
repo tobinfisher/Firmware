@@ -272,7 +272,7 @@ mc_thread_main(int argc, char *argv[])
 				/* reset yaw setpoint after offboard control */
 				reset_yaw_sp = true;
 
-			} else if (/*TRUE ||*/ control_mode.flag_control_manual_enabled) { //Needs to be true for man control to work
+			} else if (control_mode.flag_control_manual_enabled) { //Needs to be true for man control to work
 				/* manual input */
 				if (control_mode.flag_control_attitude_enabled) {
 					/* control attitude, update attitude setpoint depending on mode */
@@ -304,7 +304,7 @@ mc_thread_main(int argc, char *argv[])
 						att_sp.roll_body = manual.roll;
 						att_sp.pitch_body = manual.pitch;
 
-						if (/*TRUE ||*/ !control_mode.flag_control_climb_rate_enabled) {
+						if (!control_mode.flag_control_climb_rate_enabled) {
 							/* pass throttle directly if not in altitude control mode */
 							att_sp.thrust = manual.throttle;
 						}

@@ -232,6 +232,7 @@ handle_message(mavlink_message_t *msg)
         }
     }*/
     
+    /*
     if (msg->msgid == MAVLINK_MSG_ID_MANUAL_CONTROL) {
         
         gcs_link = TRUE;
@@ -252,10 +253,6 @@ handle_message(mavlink_message_t *msg)
         
         mavlink_manual_control_t man;
         mavlink_msg_manual_control_decode(msg, &man);
-        
-        /*
-         * rate control mode - defined by MAVLink
-         */
         
         //Values for pitch and roll should be the desired angles in radians
         //Assuming that we want to pitch/roll a max of 30 degrees, that means the value should vary between +/- .53
@@ -272,7 +269,7 @@ handle_message(mavlink_message_t *msg)
         
         offboard_control_sp.timestamp = hrt_absolute_time();
         
-        /* check if topic has to be advertised */
+        // check if topic has to be advertised
         if (offboard_control_sp_pub <= 0) {
             offboard_control_sp_pub = orb_advertise(ORB_ID(offboard_control_setpoint), &offboard_control_sp);
             
@@ -281,8 +278,9 @@ handle_message(mavlink_message_t *msg)
             orb_publish(ORB_ID(offboard_control_setpoint), offboard_control_sp_pub, &offboard_control_sp);
         }
 }
+     */
     
-  /*
+  
     if (msg->msgid == MAVLINK_MSG_ID_MANUAL_CONTROL) {
         
         gcs_link = TRUE;
@@ -290,8 +288,6 @@ handle_message(mavlink_message_t *msg)
         message_counter ++;
         
         if (message_counter % 20 == 0) {
-            
-            //mavlink_log_info(mavlink_fd, "ACK1");
             
             mavlink_message_t ack_msg;
             mavlink_command_ack_t ack;
@@ -303,20 +299,6 @@ handle_message(mavlink_message_t *msg)
         
         mavlink_manual_control_t man;
         mavlink_msg_manual_control_decode(msg, &man);
-        
-        struct rc_channels_s rc_man;
-        memset(&rc_man, 0, sizeof(rc_man));
-        static orb_advert_t rc_pub = 0;
-        
-        rc_man.timestamp = hrt_absolute_time();
-        rc_man.chan_count = 4;
-        
-        rc_man.chan[0].scaled = (float)man.x / 1000.0f;
-        rc_man.chan[1].scaled = (float)man.y / 1000.0f;
-        rc_man.chan[2].scaled = (float)man.r / 1000.0f;
-        rc_man.chan[3].scaled = (float)man.z / 1000.0f;
-        rc_man.chan[4].scaled = 0;
-        rc_man.chan[5].scaled = 0;
         
         struct manual_control_setpoint_s mc;
         static orb_advert_t mc_pub = 0;
@@ -332,20 +314,11 @@ handle_message(mavlink_message_t *msg)
         mc.assisted_switch = NAN;
         mc.mission_switch = NAN;
         
-        mc.timestamp = rc_man.timestamp;
+        mc.timestamp = hrt_absolute_time();
         mc.roll = (float)man.x / 1000.0f;
         mc.pitch = (float)man.y / 1000.0f;
         mc.yaw = (float)man.r / 1000.0f;
         mc.throttle = (float)man.z / 1000.0f;
-        
-        // fake RC channels with manual control input
-        
-        if (rc_pub == 0) {
-            rc_pub = orb_advertise(ORB_ID(rc_channels), &rc_man);
-            
-        } else {
-            orb_publish(ORB_ID(rc_channels), rc_pub, &rc_man);
-        }
         
         if (mc_pub == 0) {
             mc_pub = orb_advertise(ORB_ID(manual_control_setpoint), &mc);
@@ -354,7 +327,7 @@ handle_message(mavlink_message_t *msg)
             orb_publish(ORB_ID(manual_control_setpoint), mc_pub, &mc);
         }
     }
-*/
+
 
 	if (msg->msgid == MAVLINK_MSG_ID_OPTICAL_FLOW) {
 		mavlink_optical_flow_t flow;
@@ -383,23 +356,10 @@ handle_message(mavlink_message_t *msg)
 
     if (msg->msgid == MAVLINK_MSG_ID_SET_MODE) {
         
-        mavlink_log_info(mavlink_fd, "Got message to arm/disarm");
-        
 		/* Set mode on request */
 		mavlink_set_mode_t new_mode;
 		mavlink_msg_set_mode_decode(msg, &new_mode);
         
-        if (new_mode.base_mode == 0) {
-            mavlink_log_info(mavlink_fd, "Got message to disarm");
-        }
-        
-        else if (new_mode.base_mode == MAV_MODE_STABILIZE_ARMED){
-            mavlink_log_info(mavlink_fd, "Got message to go into Stabilize Armed mode");
-        }
-        
-        else if (new_mode.base_mode == MAV_MODE_FLAG_SAFETY_ARMED){
-            mavlink_log_info(mavlink_fd, "Got message to go into Safety Armed mode");
-        }
         
 		/* Copy the content of mavlink_command_long_t cmd_mavlink into command_t cmd */
 		vcmd.param1 = new_mode.base_mode;
@@ -418,12 +378,10 @@ handle_message(mavlink_message_t *msg)
         
 		/* check if topic is advertised */
 		if (cmd_pub <= 0) {
-            mavlink_log_info(mavlink_fd, "Topic is advertised");
 			cmd_pub = orb_advertise(ORB_ID(vehicle_command), &vcmd);
             
 		} else {
 			/* create command */
-            mavlink_log_info(mavlink_fd, "Topic is not advertised");
 			orb_publish(ORB_ID(vehicle_command), cmd_pub, &vcmd);
 		}
 	}

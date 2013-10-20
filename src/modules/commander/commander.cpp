@@ -124,8 +124,8 @@ extern struct system_load_s system_load;
 #define POSITION_TIMEOUT 1000000 /**< consider the local or global position estimate invalid after 1s */
 #define RC_TIMEOUT 1000000 //100000  //TF changed
 #define DIFFPRESS_TIMEOUT 2000000
-#define MANUAL_CTRL_TIMEOUT 500000 //Todd addition
-#define OFFBOARD_CTRL_TIMEOUT 500000 //TF addition
+#define MANUAL_CTRL_TIMEOUT 3000000 //Todd addition
+#define OFFBOARD_CTRL_TIMEOUT 3000000 //TF addition, should be 1 second
 
 #define PRINT_INTERVAL	5000000
 #define PRINT_MODE_REJECT_INTERVAL	2000000
@@ -362,6 +362,9 @@ void handle_command(struct vehicle_status_s *status, const struct safety_s *safe
 			uint8_t base_mode = (uint8_t) cmd->param1;
 			uint8_t custom_main_mode = (uint8_t) cmd->param2;
 			transition_result_t arming_res = TRANSITION_NOT_CHANGED;
+        
+        
+        mavlink_log_info(mavlink_fd, "[cmd] got message to handle command");
 
 			/* set HIL state */
 			hil_state_t new_hil_state = (base_mode & MAV_MODE_FLAG_HIL_ENABLED) ? HIL_STATE_ON : HIL_STATE_OFF;
@@ -384,8 +387,12 @@ void handle_command(struct vehicle_status_s *status, const struct safety_s *safe
 			arming_res = TRANSITION_NOT_CHANGED;
 
 			if (base_mode & MAV_MODE_FLAG_SAFETY_ARMED) {
+                
+                mavlink_log_info(mavlink_fd, "[cmd] got arm message");
+                
 				if ((safety->safety_switch_available && !safety->safety_off) && !control_mode->flag_system_hil_enabled) {
 					print_reject_arm("NOT ARMING: Press safety switch first.");
+                    mavlink_log_info(mavlink_fd, "arming denied");
 					arming_res = TRANSITION_DENIED;
 
 				} else {
@@ -414,18 +421,22 @@ void handle_command(struct vehicle_status_s *status, const struct safety_s *safe
 			transition_result_t main_res = TRANSITION_DENIED;
 
 			if (base_mode & MAV_MODE_FLAG_CUSTOM_MODE_ENABLED) {
+                
 				/* use autopilot-specific mode */
 				if (custom_main_mode == PX4_CUSTOM_MAIN_MODE_MANUAL) {
 					/* MANUAL */
 					main_res = main_state_transition(status, MAIN_STATE_MANUAL);
+                    //mavlink_log_info(mavlink_fd, "[cmd] res for manual = %i", main_res);
 
 				} else if (custom_main_mode == PX4_CUSTOM_MAIN_MODE_SEATBELT) {
 					/* SEATBELT */
 					main_res = main_state_transition(status, MAIN_STATE_SEATBELT);
+                    //mavlink_log_info(mavlink_fd, "[cmd] res for seatbelt = %i", main_res);
 
 				} else if (custom_main_mode == PX4_CUSTOM_MAIN_MODE_EASY) {
 					/* EASY */
 					main_res = main_state_transition(status, MAIN_STATE_EASY);
+                    //mavlink_log_info(mavlink_fd, "[cmd] res for easy = %i", main_res);
 
 				} else if (custom_main_mode == PX4_CUSTOM_MAIN_MODE_AUTO) {
 					/* AUTO */
@@ -830,6 +841,8 @@ int commander_thread_main(int argc, char *argv[])
             
 			status.manual_control_signal_found_once = true;
 			status.manual_control_signal_lost = false;
+            
+            //control_mode.flag_control_manual_enabled = TRUE;
             
 			status.manual_control_last_timestamp = hrt_absolute_time();
             
@@ -1646,7 +1659,8 @@ check_navigation_state_machine(struct vehicle_status_s *status, struct vehicle_c
 	} else {
 		/* manual control modes */
 		if ((status->rc_signal_lost && status->manual_control_signal_lost && status->offboard_control_signal_lost) && (status->arming_state == ARMING_STATE_ARMED || status->arming_state == ARMING_STATE_ARMED_ERROR)) {
-			/* switch to failsafe mode */
+            
+            /* switch to failsafe mode */
 			bool manual_control_old = control_mode->flag_control_manual_enabled;
             bool offboard_control_old = control_mode->flag_control_offboard_enabled; //TF added
 
@@ -1663,7 +1677,7 @@ check_navigation_state_machine(struct vehicle_status_s *status, struct vehicle_c
 				res = navigation_state_transition(status, NAVIGATION_STATE_ALTHOLD, control_mode);
 			}
 
-			control_mode->flag_control_manual_enabled = false;  //Why is this here?
+			//control_mode->flag_control_manual_enabled = false;  //Why is this here?
             control_mode->flag_control_offboard_enabled = false;
 
 			if (res == TRANSITION_NOT_CHANGED && (manual_control_old || offboard_control_old)) {

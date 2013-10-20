@@ -334,8 +334,10 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 			float z_sp_offs_max = params.z_vel_max / params.z_p * 2.0f;
 			float xy_sp_offs_max = params.xy_vel_max / params.xy_p * 2.0f;
 			float sp_move_rate[3] = { 0.0f, 0.0f, 0.0f };
+            
+            //mavlink_log_info(mavlink_fd, "[mpc] got here");
 
-			if (control_mode.flag_control_manual_enabled) {
+			if (control_mode.flag_control_manual_enabled) { //Need to comment out line in failsafe code for this to work
 				/* manual control */
 				/* check for reference point updates and correct setpoint */
 				if (local_pos.ref_timestamp != ref_alt_t) {
@@ -348,6 +350,8 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 					ref_alt = local_pos.ref_alt;
 					// TODO also correct XY setpoint
 				}
+                
+                 //mavlink_log_info(mavlink_fd, "[mpc] got here 2");
 
 				/* reset setpoints to current position if needed */
 				if (control_mode.flag_control_altitude_enabled) {
@@ -371,6 +375,8 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 							local_pos_sp.z = local_pos.z - z_sp_offs_max;
 						}
 					}
+                    
+                    mavlink_log_info(mavlink_fd, "[mpc] z set = %0.1f", local_pos_sp.z);
 				}
 
 				if (control_mode.flag_control_position_enabled) {

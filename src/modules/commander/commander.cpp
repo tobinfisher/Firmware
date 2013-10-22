@@ -124,8 +124,8 @@ extern struct system_load_s system_load;
 #define POSITION_TIMEOUT 1000000 /**< consider the local or global position estimate invalid after 1s */
 #define RC_TIMEOUT 1000000 //100000  //TF changed
 #define DIFFPRESS_TIMEOUT 2000000
-#define MANUAL_CTRL_TIMEOUT 3000000 //Todd addition
-#define OFFBOARD_CTRL_TIMEOUT 3000000 //TF addition, should be 1 second
+#define MANUAL_CTRL_TIMEOUT 2000000 //Todd addition
+#define OFFBOARD_CTRL_TIMEOUT 2000000 //TF addition, should be 2 seconds
 
 #define PRINT_INTERVAL	5000000
 #define PRINT_MODE_REJECT_INTERVAL	2000000
@@ -841,8 +841,9 @@ int commander_thread_main(int argc, char *argv[])
             
 			status.manual_control_signal_found_once = true;
 			status.manual_control_signal_lost = false;
+            //control_mode->flag_control_manual_enabled = TRUE;
             
-            //control_mode.flag_control_manual_enabled = TRUE;
+            control_mode.flag_control_manual_enabled = TRUE;
             
 			status.manual_control_last_timestamp = hrt_absolute_time();
             
@@ -1677,7 +1678,7 @@ check_navigation_state_machine(struct vehicle_status_s *status, struct vehicle_c
 				res = navigation_state_transition(status, NAVIGATION_STATE_ALTHOLD, control_mode);
 			}
 
-			//control_mode->flag_control_manual_enabled = false;  //Why is this here?
+			control_mode->flag_control_manual_enabled = false;
             control_mode->flag_control_offboard_enabled = false;
 
 			if (res == TRANSITION_NOT_CHANGED && (manual_control_old || offboard_control_old)) {

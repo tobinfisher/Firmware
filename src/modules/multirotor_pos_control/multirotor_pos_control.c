@@ -225,7 +225,7 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 	bool reset_takeoff_sp = true;
 
 	hrt_abstime t_prev = 0;
-	const float alt_ctl_dz = 0.2f;
+	const float alt_ctl_dz = 0.1f;  //Amount of deadband in alt control mode
 	const float pos_ctl_dz = 0.05f;
 
 	float ref_alt = 0.0f;
@@ -363,6 +363,8 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 
 					/* move altitude setpoint with throttle stick */
 					float z_sp_ctl = scale_control(manual.throttle - 0.5f, 0.5f, alt_ctl_dz);
+                    
+                    mavlink_log_info(mavlink_fd, "[mpc] z_sp_ctrl = %0.1f", z_sp_ctl);
 
 					if (z_sp_ctl != 0.0f) {
 						sp_move_rate[2] = -z_sp_ctl * params.z_vel_max;
@@ -376,7 +378,7 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 						}
 					}
                     
-                    mavlink_log_info(mavlink_fd, "[mpc] z set = %0.1f", local_pos_sp.z);
+                    //mavlink_log_info(mavlink_fd, "[mpc] z set = %0.1f", local_pos_sp.z);
 				}
 
 				if (control_mode.flag_control_position_enabled) {

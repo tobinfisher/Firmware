@@ -246,6 +246,7 @@ main_state_transition(struct vehicle_status_s *current_state, main_state_t new_m
 			if (current_state->condition_local_altitude_valid ||
 				current_state->condition_global_position_valid) {
 				ret = TRANSITION_CHANGED;
+                mavlink_log_info(mavlink_fd2, "[SM] Seatbelt res=%i", ret);
 			}
 
 			break;
@@ -256,6 +257,7 @@ main_state_transition(struct vehicle_status_s *current_state, main_state_t new_m
 			if (current_state->condition_local_position_valid ||
 				current_state->condition_global_position_valid) {
 				ret = TRANSITION_CHANGED;
+                mavlink_log_info(mavlink_fd2, "[SM] Easy res=%i", ret);
 			}
 
 			break;

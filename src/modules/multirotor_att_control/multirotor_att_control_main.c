@@ -90,6 +90,9 @@ static const float yaw_deadzone = 0.01f;
 static int mavlink_fd = 0;
 
 static int
+
+#define FAIL_SAFE_TILT 90 * (3.14/180)
+
 mc_thread_main(int argc, char *argv[])
 {
 	
@@ -249,7 +252,12 @@ mc_thread_main(int argc, char *argv[])
              */
 
 			/* define which input is the dominating control input */
-			if (control_mode.flag_control_offboard_enabled) {
+            
+			if (att.roll > FAIL_SAFE_TILT || att.roll < - FAIL_SAFE_TILT || att.pitch > FAIL_SAFE_TILT || att.pitch < - FAIL_SAFE_TILT) {
+                att_sp.thrust = 0;
+            }
+            
+            else if (control_mode.flag_control_offboard_enabled) {
 				/* offboard inputs */
 				if (offboard_sp.mode == OFFBOARD_CONTROL_MODE_DIRECT_RATES) {
 					rates_sp.roll = offboard_sp.p1;

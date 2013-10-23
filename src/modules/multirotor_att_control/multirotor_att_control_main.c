@@ -284,20 +284,20 @@ mc_thread_main(int argc, char *argv[])
 				/* manual input */
 				if (control_mode.flag_control_attitude_enabled) {
 					/* control attitude, update attitude setpoint depending on mode */
-					if (att_sp.thrust < 0.1f) {
-						/* no thrust, don't try to control yaw */
+					/*if (att_sp.thrust < 0.1f) {
+						//no thrust, don't try to control yaw
 						rates_sp.yaw = 0.0f;
 						control_yaw_position = false;
 
 						if (status.condition_landed) {
-							/* reset yaw setpoint if on ground */
+							// reset yaw setpoint if on ground
 							reset_yaw_sp = true;
 						}
 
 					} else {
-						/* only move yaw setpoint if manual input is != 0 */
+						// only move yaw setpoint if manual input is != 0
 						if (manual.yaw < -yaw_deadzone || yaw_deadzone < manual.yaw) {
-							/* control yaw rate */
+							// control yaw rate
 							control_yaw_position = false;
 							rates_sp.yaw = manual.yaw;
 							reset_yaw_sp = true;	// has no effect on control, just for beautiful log
@@ -306,11 +306,12 @@ mc_thread_main(int argc, char *argv[])
 							control_yaw_position = true;
 						}
 					}
-
+                     */
 					if (!control_mode.flag_control_velocity_enabled) {
 						/* update attitude setpoint if not in position control mode */
 						att_sp.roll_body = manual.roll;
 						att_sp.pitch_body = manual.pitch;
+                        att_sp.yaw_body = manual.yaw; //TF added
 
 						if (!control_mode.flag_control_climb_rate_enabled) {
 							/* pass throttle directly if not in altitude control mode */

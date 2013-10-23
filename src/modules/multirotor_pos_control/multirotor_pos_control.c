@@ -63,6 +63,7 @@
 #include <uORB/topics/vehicle_local_position_setpoint.h>
 #include <uORB/topics/vehicle_global_position_setpoint.h>
 #include <uORB/topics/vehicle_global_velocity_setpoint.h>
+#include <uORB/topics/debug_key_value.h>
 #include <systemlib/systemlib.h>
 #include <systemlib/pid/pid.h>
 #include <mavlink/mavlink_log.h>
@@ -74,6 +75,7 @@
 static bool thread_should_exit = false;		/**< Deamon exit flag */
 static bool thread_running = false;		/**< Deamon status flag */
 static int deamon_task;				/**< Handle of deamon task / thread */
+
 
 __EXPORT int multirotor_pos_control_main(int argc, char *argv[]);
 
@@ -108,6 +110,7 @@ static void usage(const char *reason)
  * The actual stack size should be set in the call
  * to task_spawn().
  */
+
 int multirotor_pos_control_main(int argc, char *argv[])
 {
 	if (argc < 1)
@@ -211,6 +214,14 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 	orb_advert_t local_pos_sp_pub = orb_advertise(ORB_ID(vehicle_local_position_setpoint), &local_pos_sp);
 	orb_advert_t global_vel_sp_pub = orb_advertise(ORB_ID(vehicle_global_velocity_setpoint), &global_vel_sp);
 	orb_advert_t att_sp_pub = orb_advertise(ORB_ID(vehicle_attitude_setpoint), &att_sp);
+    
+    //Debugging alt hold
+    struct debug_key_value_s alt_sp_dbg = { .key = "alt_sp_dbg", .value = 0.0f };;
+    orb_advert_t pub_alt_sp_dbg = orb_advertise(ORB_ID(debug_key_value), &alt_sp_dbg);
+    
+    struct debug_key_value_s alt_dbg = { .key = "alt_dgb   ", .value = 0.0f };
+    orb_advert_t pub_alt_dbg = orb_advertise(ORB_ID(debug_key_value), &alt_dbg);
+    
 
 	bool reset_mission_sp = false;
 	bool global_pos_sp_valid = false;
@@ -225,7 +236,7 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 	bool reset_takeoff_sp = true;
 
 	hrt_abstime t_prev = 0;
-	const float alt_ctl_dz = 0.1f;  //Amount of deadband in alt control mode
+	const float alt_ctl_dz = 0.05f;  //Amount of deadband in alt control mode, reduce for control with iPhone
 	const float pos_ctl_dz = 0.05f;
 
 	float ref_alt = 0.0f;
@@ -252,6 +263,8 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 
 	pid_init(&z_pos_pid, params.z_p, 0.0f, params.z_d, 1.0f, params.z_vel_max, PID_MODE_DERIVATIV_SET, 0.02f);
 	thrust_pid_init(&z_vel_pid, params.z_vel_p, params.z_vel_i, params.z_vel_d, -params.thr_max, -params.thr_min, PID_MODE_DERIVATIV_CALC_NO_SP, 0.02f);
+    
+    static int counter = 0;
 
 	while (!thread_should_exit) {
 
@@ -364,7 +377,7 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 					/* move altitude setpoint with throttle stick */
 					float z_sp_ctl = scale_control(manual.throttle - 0.5f, 0.5f, alt_ctl_dz);
                     
-                    mavlink_log_info(mavlink_fd, "[mpc] z_sp_ctrl = %0.1f", z_sp_ctl);
+                    //mavlink_log_info(mavlink_fd, "[mpc] z_sp_ctrl = %0.1f", z_sp_ctl);
 
 					if (z_sp_ctl != 0.0f) {
 						sp_move_rate[2] = -z_sp_ctl * params.z_vel_max;
@@ -378,7 +391,21 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 						}
 					}
                     
-                    //mavlink_log_info(mavlink_fd, "[mpc] z set = %0.1f", local_pos_sp.z);
+                    
+                    if (local_pos_sp.z < -params.alt_max) local_pos_sp.z = -params.alt_max; //Set max alt to 4 m. Setpoint goes down with increasing alt for reasons that I don't understand
+                    
+                    //appears that we can only send one named float per loop, so we alternate
+                    if (counter % 2 == 0) {
+                        alt_dbg.value = local_pos.z;
+                        orb_publish(ORB_ID(debug_key_value), pub_alt_dbg, &alt_dbg);
+                    }
+                    
+                    else {
+                        alt_sp_dbg.value = local_pos_sp.z;
+                        orb_publish(ORB_ID(debug_key_value), pub_alt_sp_dbg, &alt_sp_dbg);
+                    }
+                    
+                    counter ++;
 				}
 
 				if (control_mode.flag_control_position_enabled) {

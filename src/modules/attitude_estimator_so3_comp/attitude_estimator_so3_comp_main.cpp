@@ -43,6 +43,11 @@
 #include <systemlib/perf_counter.h>
 #include <systemlib/err.h>
 
+
+#include <uORB/topics/debug_key_value.h>
+
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif

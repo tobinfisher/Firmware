@@ -632,7 +632,7 @@ int mavlink_thread_main(int argc, char *argv[])
 		/* 2 Hz - TF Changed from 500 */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_MANUAL_CONTROL, 500000);
 		/* 2 Hz TF Changed from 500 */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_GPS_RAW_INT, 500000);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_GPS_RAW_INT, 1000);
         
 	} else {
 		/* very low baud rate, limit to 1 Hz / 1000 ms */

@@ -71,6 +71,8 @@
 #include "multirotor_pos_control_params.h"
 #include "thrust_pid.h"
 
+#define FAILSAFE_TIMEOUT 5000000 //5 seconds - Time before shutting motors off, after initiation of failsafe
+
 
 static bool thread_should_exit = false;		/**< Deamon exit flag */
 static bool thread_running = false;		/**< Deamon status flag */
@@ -242,6 +244,9 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 	float ref_alt = 0.0f;
 	hrt_abstime ref_alt_t = 0;
 	uint64_t local_ref_timestamp = 0;
+    
+    //hrt_abstime failsafe_start_time = 0;
+    uint64_t failsafe_start_time = 0;
 
 	PID_t xy_pos_pids[2];
 	PID_t xy_vel_pids[2];
@@ -347,10 +352,13 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 			float z_sp_offs_max = params.z_vel_max / params.z_p * 2.0f;
 			float xy_sp_offs_max = params.xy_vel_max / params.xy_p * 2.0f;
 			float sp_move_rate[3] = { 0.0f, 0.0f, 0.0f };
-            
-            //mavlink_log_info(mavlink_fd, "[mpc] got here");
 
-			if (control_mode.flag_control_manual_enabled) { //Need to comment out line in failsafe code for this to work
+			if (control_mode.flag_control_manual_enabled) {
+                
+                failsafe_start_time = 0; //reset failsafe time in the event of regaining signal
+                
+                //mavlink_log_info(mavlink_fd, "[mpc] failsafe start = %i", failsafe_start_time);  //This never prints as zero???
+                
 				/* manual control */
 				/* check for reference point updates and correct setpoint */
 				if (local_pos.ref_timestamp != ref_alt_t) {
@@ -549,21 +557,38 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 				reset_man_sp_z = true;
 
 			} else {
-				/* no control (failsafe), loiter or stay on ground */
-				if (local_pos.landed) {
-					/* landed: move setpoint down */
-					/* in air: hold altitude */
-					if (local_pos_sp.z < 5.0f) {
-						/* set altitude setpoint to 5m under ground,
-						 * don't set it too deep to avoid unexpected landing in case of false "landed" signal */
-						local_pos_sp.z = 5.0f;
-						mavlink_log_info(mavlink_fd, "[mpc] landed, set alt: %.2f", (double) - local_pos_sp.z);
-					}
-
+                
+                // FAILSAFE //
+                
+                //Record start of failsafe in order to implement time dependent failsafe behavior
+                if (failsafe_start_time == 0) {
+                    failsafe_start_time = hrt_absolute_time();
+                    //mavlink_log_info(mavlink_fd, "[mpc] setting start time = %i", failsafe_start_time);
+                }
+                
+                uint32_t failsafe_time = hrt_absolute_time() - failsafe_start_time;
+                
+                
+                
+                //if on or near ground or past failsafe timeout, keep motors off/ turn them off
+                if (manual.throttle < params.thr_min || local_pos.z > - 1|| failsafe_time > FAILSAFE_TIMEOUT ) {
+                    att_sp.thrust = 0;
+                    //mavlink_log_info(mavlink_fd, "[mpc] setting throttle to 0 at t= %i", failsafe_time);
+                    
+                    orb_publish(ORB_ID(vehicle_attitude_setpoint), att_sp_pub, &att_sp);
+                }
+                
+                // in air: land
+                else if (local_pos_sp.z < 5.0f) {
+                    // set altitude setpoint to 5m under ground,
+                    //don't set it too deep to avoid unexpected landing in case of false "landed" signal
+                    local_pos_sp.z = 5.0f;
+                    //mavlink_log_info(mavlink_fd, "[mpc] landing, set alt: %.2f", (double) - local_pos_sp.z);
+                }
 					reset_man_sp_z = true;
 
-				} else {
-					/* in air: hold altitude */
+				/*} else {
+					// in air: hold altitude
 					if (reset_man_sp_z) {
 						reset_man_sp_z = false;
 						local_pos_sp.z = local_pos.z;
@@ -571,7 +596,7 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 					}
 
 					reset_auto_sp_z = false;
-				}
+				}*/
 
 				if (control_mode.flag_control_position_enabled) {
 					if (reset_man_sp_xy) {
@@ -622,8 +647,11 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 			orb_publish(ORB_ID(vehicle_global_velocity_setpoint), global_vel_sp_pub, &global_vel_sp);
 			// TODO subscribe to velocity setpoint if altitude/position control disabled
 
-			if (control_mode.flag_control_climb_rate_enabled || control_mode.flag_control_velocity_enabled) {
-				/* run velocity controllers, calculate thrust vector with attitude-thrust compensation */
+            //TF added min throttle contraint to avoid having props spin up on failsafe
+			
+            if ((control_mode.flag_control_climb_rate_enabled || control_mode.flag_control_velocity_enabled) && att_sp.thrust > params.thr_min) {
+				
+                /* run velocity controllers, calculate thrust vector with attitude-thrust compensation */
 				float thrust_sp[3] = { 0.0f, 0.0f, 0.0f };
 
 				if (control_mode.flag_control_climb_rate_enabled) {

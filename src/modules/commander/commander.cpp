@@ -387,17 +387,19 @@ void handle_command(struct vehicle_status_s *status, const struct safety_s *safe
 			arming_res = TRANSITION_NOT_CHANGED;
 
 			if (base_mode & MAV_MODE_FLAG_SAFETY_ARMED) {
+                 
+                 //Safety switch appears to get set as available and on intermittently for reasons that don't make sense, as the safety switch is on the PX4IO, which isn't connected. Hard coded this block of code not to exectute for now, but should find a better fix eventually
                 
-                mavlink_log_info(mavlink_fd, "[cmd] got arm message");
-                
-				if ((safety->safety_switch_available && !safety->safety_off) && !control_mode->flag_system_hil_enabled) {
+				if (FALSE && (safety->safety_switch_available && !safety->safety_off) && !control_mode->flag_system_hil_enabled) {
 					print_reject_arm("NOT ARMING: Press safety switch first.");
                     mavlink_log_info(mavlink_fd, "arming denied");
 					arming_res = TRANSITION_DENIED;
 
 				} else {
-					arming_res = arming_state_transition(status, safety, control_mode, ARMING_STATE_ARMED, armed);
-				}
+                
+                arming_res = arming_state_transition(status, safety, control_mode, ARMING_STATE_ARMED, armed);
+				
+                }
 
 				if (arming_res == TRANSITION_CHANGED) {
 					mavlink_log_info(mavlink_fd, "[cmd] ARMED by command");
@@ -537,7 +539,7 @@ void handle_command(struct vehicle_status_s *status, const struct safety_s *safe
 			mavlink_log_critical(mavlink_fd, "[cmd] command failed: %u", cmd->command);
 
 		} else if (result == VEHICLE_CMD_RESULT_TEMPORARILY_REJECTED) {
-			mavlink_log_critical(mavlink_fd, "[cmd] command temporarily rejected: %u", cmd->command);
+			mavlink_log_critical(mavlink_fd, "[cmd] command temporarily rejected2: %u", cmd->command);
 
 		}
 	}
@@ -917,6 +919,7 @@ int commander_thread_main(int argc, char *argv[])
 		orb_check(safety_sub, &updated);
 
 		if (updated) {
+            mavlink_log_info(mavlink_fd, "[cmd] safety switch updated");
 			orb_copy(ORB_ID(safety), safety_sub, &safety);
 		}
 
@@ -1295,7 +1298,7 @@ int commander_thread_main(int argc, char *argv[])
 		if (!arm_tune_played && armed.armed) {
 			/* play tune when armed */
 			if (tune_arm() == OK)
-				arm_tune_played = true;
+				arm_tune_played = TRUE;
 
 		} else if (status.battery_warning == VEHICLE_BATTERY_WARNING_LOW) {
 			/* play tune on battery warning */
@@ -1742,7 +1745,7 @@ void answer_command(struct vehicle_command_s &cmd, enum VEHICLE_CMD_RESULT resul
 		break;
 
 	case VEHICLE_CMD_RESULT_TEMPORARILY_REJECTED:
-		mavlink_log_critical(mavlink_fd, "[cmd] command temporarily rejected: %u", cmd.command);
+		mavlink_log_critical(mavlink_fd, "[cmd] command temporarily rejected1: %u", cmd.command);
 		tune_negative();
 		break;
 

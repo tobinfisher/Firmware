@@ -274,6 +274,9 @@ l_vehicle_gps_position(const struct listener *l)
 				     gps.satellites_visible);
 
 	/* update SAT info every 10 seconds */
+    /*
+     //Don't send GPS status messages, as they are bigger than the max message size that we allow (and we don't use the messages anyways
+     
 	if (gps.satellite_info_available && (gps_counter % 50 == 0)) {
 		mavlink_msg_gps_status_send(MAVLINK_COMM_0,
 					    gps.satellites_visible,
@@ -283,6 +286,7 @@ l_vehicle_gps_position(const struct listener *l)
 					    gps.satellite_azimuth,
 					    gps.satellite_snr);
 	}
+     */
 
 	gps_counter++;
 }
@@ -772,7 +776,7 @@ uorb_receive_start(void)
 
 	/* --- GPS VALUE --- */
 	mavlink_subs.gps_sub = orb_subscribe(ORB_ID(vehicle_gps_position));
-	orb_set_interval(mavlink_subs.gps_sub, 2000000);	/* 5Hz updates */
+	orb_set_interval(mavlink_subs.gps_sub, 400);	/* 5Hz updates */
 
 	/* --- HOME POSITION --- */
 	mavlink_subs.home_sub = orb_subscribe(ORB_ID(home_position));

@@ -146,8 +146,6 @@ handle_message(mavlink_message_t *msg)
 		if (cmd_mavlink.target_system == mavlink_system.sysid && ((cmd_mavlink.target_component == mavlink_system.compid)
 				|| (cmd_mavlink.target_component == MAV_COMP_ID_ALL))) {
             
-            mavlink_log_info(mavlink_fd, "Got a command long");
-            
 			//check for MAVLINK terminate command
 			if (cmd_mavlink.command == MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN && ((int)cmd_mavlink.param1) == 3) {
 				/* This is the link shutdown command, terminate mavlink */

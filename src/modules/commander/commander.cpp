@@ -536,7 +536,7 @@ void handle_command(struct vehicle_status_s *status, const struct safety_s *safe
 			mavlink_log_critical(mavlink_fd, "[cmd] command denied: %u", cmd->command);
 
 		} else if (result == VEHICLE_CMD_RESULT_FAILED) {
-			mavlink_log_critical(mavlink_fd, "[cmd] command failed: %u", cmd->command);
+			mavlink_log_critical(mavlink_fd, "[cmd] command failed1: %u", cmd->command);
 
 		} else if (result == VEHICLE_CMD_RESULT_TEMPORARILY_REJECTED) {
 			mavlink_log_critical(mavlink_fd, "[cmd] command temporarily rejected2: %u", cmd->command);
@@ -1740,7 +1740,7 @@ void answer_command(struct vehicle_command_s &cmd, enum VEHICLE_CMD_RESULT resul
 		break;
 
 	case VEHICLE_CMD_RESULT_FAILED:
-		mavlink_log_critical(mavlink_fd, "[cmd] command failed: %u", cmd.command);
+		mavlink_log_critical(mavlink_fd, "[cmd] command failed2: %u", cmd.command);
 		tune_negative();
 		break;
 

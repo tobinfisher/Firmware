@@ -784,7 +784,7 @@ uorb_receive_start(void)
 
 	/* --- SYSTEM STATE --- */
 	status_sub = orb_subscribe(ORB_ID(vehicle_status));
-	orb_set_interval(status_sub, 300);		/* max 3.33 Hz updates */
+	orb_set_interval(status_sub, 300);		/* max 3.33 Hz updates Status includes the heartbeat, don't turn down */
 
 	/* --- RC CHANNELS VALUE --- */
 	rc_sub = orb_subscribe(ORB_ID(rc_channels));

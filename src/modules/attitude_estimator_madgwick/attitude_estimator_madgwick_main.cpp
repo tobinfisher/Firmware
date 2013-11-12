@@ -267,11 +267,6 @@ float z_k[9];
 			/* check if we're in HIL - not getting sensor data is fine then */
 			orb_copy(ORB_ID(vehicle_status), sub_state, &state);
 
-			if (!state.flag_hil_enabled) {
-				fprintf(stderr,
-					"[att madgwick] WARNING: Not getting sensors - sensor app running?\n");
-			}
-
 		} else {
 
 			/* only update parameters if they changed */

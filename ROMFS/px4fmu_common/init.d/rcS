@@ -130,6 +130,7 @@ then
 	#
 	# Upgrade PX4IO firmware
 	#
+	# px4io detect
 	if px4io detect
 	then
 		echo "PX4IO running, not upgrading"
@@ -154,6 +155,12 @@ then
 	# SYS_AUTOSTART = 0 means no autostart (default)
 	#
 	
+	if param compare SYS_AUTOSTART 55
+	then
+		sh /etc/init.d/55_rev
+		set MODE custom
+	fi
+
 	if param compare SYS_AUTOSTART 8
 	then
 		sh /etc/init.d/08_ardrone

@@ -1862,7 +1862,8 @@ void *commander_low_prio_loop(void *arg)
 				} else if ((int)(cmd.param5) == 1) {
 					/* accelerometer calibration */
 					answer_command(cmd, VEHICLE_CMD_RESULT_ACCEPTED);
-					calib_ret = do_accel_calibration(mavlink_fd);
+					//calib_ret = do_accel_calibration(mavlink_fd);
+                    calib_ret = do_accel_calibration_simple(mavlink_fd);
 
 				} else if ((int)(cmd.param6) == 1) {
 					/* airspeed calibration */

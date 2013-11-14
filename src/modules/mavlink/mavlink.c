@@ -622,7 +622,7 @@ int mavlink_thread_main(int argc, char *argv[])
 		/* 10 Hz / 100 ms - TF Changed from 300 */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_RAW_IMU, 500000); //Set higher for testing magnetometer
         // TF - Changed from 500
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_HIGHRES_IMU, 2000000);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_HIGHRES_IMU, 200); //Set higher for calibration of sensors
 		/* 10 Hz / 100 ms ATTITUDE */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_ATTITUDE, 300);
 		/* 5 Hz / 200 ms - TF Changed from 200 */

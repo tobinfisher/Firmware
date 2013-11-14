@@ -1518,6 +1518,7 @@ void Sensors::MagnetometerBiasExtraction(struct sensor_combined_s *raw)
 	// these need to be static, made them part of sensors object:
 	//Vector3 offsetsV(0.0f,0.0f,0.0f);
 	//Vector3 xhatV(0.0f,0.0f,0.0f);
+   static uint32_t counter = 0;
 
 	math::Vector3 xhatDot(3);
 	math::Vector3 biasDot(3);
@@ -1531,9 +1532,12 @@ void Sensors::MagnetometerBiasExtraction(struct sensor_combined_s *raw)
    xhat = xhat + xhatDot*MAG_DT;
 
    /* mag offsets */
+   if((counter++)%500 == 0)
+   {
    	param_set(_parameter_handles.mag_offset[0], &(offsets(0)));
    	param_set(_parameter_handles.mag_offset[1], &(offsets(1)));
    	param_set(_parameter_handles.mag_offset[2], &(offsets(2)));
+   }
 
 }
 

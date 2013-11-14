@@ -92,6 +92,8 @@
 #define BARO_HEALTH_COUNTER_LIMIT_OK 5
 #define ADC_HEALTH_COUNTER_LIMIT_OK  5
 
+math::Vector3 offsets = {0,0,0};
+math::Vector3 xhat = {0,0,0};
 /**
  * Analog layout:
  * FMU:
@@ -232,6 +234,9 @@ public:
 	int		start();
 
 private:
+
+
+
 	static const unsigned _rc_max_chan_count = RC_CHANNELS_MAX;	/**< maximum number of r/c channels we handle */
 
 	hrt_abstime	_rc_last_valid;		/**< last time we got a valid RC signal */
@@ -378,7 +383,7 @@ private:
 
 	}		_parameter_handles;		/**< handles for interesting parameters */
 
-
+	void   MagnetometerBiasExtraction(struct sensor_combined_s *raw);
 	/**
 	 * Update our local parameter cache.
 	 */
@@ -1504,6 +1509,33 @@ Sensors::rc_poll()
 	}
 
 }
+#define MAG_GAIN_1 10.0f
+#define MAG_GAIN_2 1.0f
+#define MAG_DT (0.01f)
+
+void Sensors::MagnetometerBiasExtraction(struct sensor_combined_s *raw)
+{
+	// these need to be static, made them part of sensors object:
+	//Vector3 offsetsV(0.0f,0.0f,0.0f);
+	//Vector3 xhatV(0.0f,0.0f,0.0f);
+
+	math::Vector3 xhatDot(3);
+	math::Vector3 biasDot(3);
+    math::Vector3 gyro = {raw->gyro_rad_s[0],raw->gyro_rad_s[1],raw->gyro_rad_s[2]};
+    math::Vector3 mag = {raw->magnetometer_ga[0],raw->magnetometer_ga[1],raw->magnetometer_ga[2]};
+
+   xhatDot = (gyro.cross(xhat-offsets)*(-1.0f)) - ((xhat-mag)*MAG_GAIN_1);
+   biasDot = gyro.cross(xhat-mag) * MAG_GAIN_2;
+
+   offsets = offsets + biasDot*MAG_DT;
+   xhat = xhat + xhatDot*MAG_DT;
+
+   /* mag offsets */
+   	param_set(_parameter_handles.mag_offset[0], &(offsets(0)));
+   	param_set(_parameter_handles.mag_offset[1], &(offsets(1)));
+   	param_set(_parameter_handles.mag_offset[2], &(offsets(2)));
+
+}
 
 void
 Sensors::task_main_trampoline(int argc, char *argv[])
@@ -1608,6 +1640,9 @@ Sensors::task_main()
 		accel_poll(raw);
 		mag_poll(raw);
 		baro_poll(raw);
+
+
+		MagnetometerBiasExtraction(&raw);
 
 		/* check battery voltage */
 		adc_poll(raw);

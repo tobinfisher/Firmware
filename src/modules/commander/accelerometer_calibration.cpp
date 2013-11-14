@@ -127,11 +127,100 @@
 #endif
 static const int ERROR = -1;
 
+int do_accel_calibration2_measurements(int mavlink_fd, float accel_offs[3]);
+
 int do_accel_calibration_measurements(int mavlink_fd, float accel_offs[3], float accel_scale[3]);
 int detect_orientation(int mavlink_fd, int sub_sensor_combined);
 int read_accelerometer_avg(int sensor_combined_sub, float accel_avg[3], int samples_num);
 int mat_invert3(float src[3][3], float dst[3][3]);
 int calculate_calibration_values(float accel_ref[6][3], float accel_T[3][3], float accel_offs[3], float g);
+
+int do_accel_calibration_simple(int mavlink_fd) {
+    
+    mavlink_log_info(mavlink_fd, "simple accel cal started");
+    
+    float accel_offs[3];
+    float accel_scale = 1;
+    
+    int res = do_accel_calibration2_measurements(mavlink_fd, accel_offs);
+    
+	if (res == OK) {
+		/* measurements complete successfully, set parameters */
+		if (param_set(param_find("SENS_ACC_XOFF"), &(accel_offs[0]))
+			|| param_set(param_find("SENS_ACC_YOFF"), &(accel_offs[1]))
+			|| param_set(param_find("SENS_ACC_ZOFF"), &(accel_offs[2]))
+			) {
+			mavlink_log_critical(mavlink_fd, "ERROR: setting offs or scale failed");
+		}
+        
+		int fd = open(ACCEL_DEVICE_PATH, 0);
+		struct accel_scale ascale = {
+			accel_offs[0],
+			accel_scale,
+			accel_offs[1],
+			accel_scale,
+			accel_offs[2],
+			accel_scale,
+		};
+        
+		if (OK != ioctl(fd, ACCELIOCSSCALE, (long unsigned int)&ascale))
+			warn("WARNING: failed to set scale / offsets for accel");
+        
+		close(fd);
+        
+		/* auto-save to EEPROM */
+		int save_ret = param_save_default();
+        
+		if (save_ret != 0) {
+			warn("WARNING: auto-save of params to storage failed");
+		}
+        
+		mavlink_log_info(mavlink_fd, "simple accel cal done");
+		return OK;
+        
+	} else {
+		/* measurements error */
+		mavlink_log_info(mavlink_fd, "accel calibration aborted");
+		return ERROR;
+	}
+}
+
+int do_accel_calibration2_measurements(int mavlink_fd, float accel_offs[3]) {
+	const int samples_num = 2500;
+    
+	/* reset existing calibration */
+	int fd = open(ACCEL_DEVICE_PATH, 0);
+	struct accel_scale ascale_null = {
+		0.0f,
+		1.0f,
+		0.0f,
+		1.0f,
+		0.0f,
+		1.0f,
+	};
+	int ioctl_res = ioctl(fd, ACCELIOCSSCALE, (long unsigned int)&ascale_null);
+	close(fd);
+    
+	if (OK != ioctl_res) {
+		warn("ERROR: failed to set scale / offsets for accel");
+		return ERROR;
+	}
+    
+	int sensor_combined_sub = orb_subscribe(ORB_ID(sensor_combined));
+    
+    float accel_val[3];
+    
+	read_accelerometer_avg(sensor_combined_sub, accel_val, samples_num);
+    
+	close(sensor_combined_sub);
+    
+	accel_offs[0] = accel_val[0];
+    accel_offs[1] = accel_val[1];
+    accel_offs[2] = accel_val[2] + 9.81;
+    
+	return OK;
+}
+
 
 int do_accel_calibration(int mavlink_fd) {
 	/* announce change */

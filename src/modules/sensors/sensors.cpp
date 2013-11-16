@@ -92,8 +92,6 @@
 #define BARO_HEALTH_COUNTER_LIMIT_OK 5
 #define ADC_HEALTH_COUNTER_LIMIT_OK  5
 
-math::Vector3 offsets = {0,0,0};
-math::Vector3 xhat = {0,0,0};
 /**
  * Analog layout:
  * FMU:
@@ -236,7 +234,10 @@ public:
 private:
 
 
-
+		math::Vector3 offsets;
+		math::Vector3 xhat;
+		math::Vector3 paramOffsets;
+		math::Vector3 avGyro,avMag;
 	static const unsigned _rc_max_chan_count = RC_CHANNELS_MAX;	/**< maximum number of r/c channels we handle */
 
 	hrt_abstime	_rc_last_valid;		/**< last time we got a valid RC signal */
@@ -501,6 +502,11 @@ Sensors	*g_sensors = nullptr;
 }
 
 Sensors::Sensors() :
+	offsets(3),
+	xhat(3),
+	paramOffsets(3),
+	avGyro(3),
+	avMag(3),
 	_rc_last_valid(0),
 
 	_fd_adc(-1),
@@ -1509,40 +1515,68 @@ Sensors::rc_poll()
 	}
 
 }
-#define MAG_GAIN_1 10.0f
-#define MAG_GAIN_2 1.0f
-#define MAG_DT (0.01f)
-
 void Sensors::MagnetometerBiasExtraction(struct sensor_combined_s *raw)
 {
-	// these need to be static, made them part of sensors object:
-	//Vector3 offsetsV(0.0f,0.0f,0.0f);
-	//Vector3 xhatV(0.0f,0.0f,0.0f);
-    static uint8_t startup = 1;
+#define MAG_GAIN_1 40.0f
+#define MAG_GAIN_2 0.8f
+#define MAG_DT (0.01f)
+#define KFILT 0.05f
+
    static uint32_t counter = 0;
+   static uint8_t startup = 1;
+   static uint64_t timestamp;
 
-    if(startup)
-    {
-        startup = 0;
-        xhat = {raw->magnetometer_ga[0],raw->magnetometer_ga[1],raw->magnetometer_ga[2]};
-    }
-	math::Vector3 xhatDot(3);
-	math::Vector3 biasDot(3);
-    math::Vector3 gyro = {raw->gyro_rad_s[0],raw->gyro_rad_s[1],raw->gyro_rad_s[2]};
-    math::Vector3 mag = {raw->magnetometer_ga[0],raw->magnetometer_ga[1],raw->magnetometer_ga[2]};
-
-   xhatDot = (gyro.cross(xhat-offsets)*(-1.0f)) - ((xhat-mag)*MAG_GAIN_1);
-   biasDot = gyro.cross(xhat-mag) * MAG_GAIN_2;
-
-   offsets = offsets + biasDot*MAG_DT;
-   xhat = xhat + xhatDot*MAG_DT;
-
-   /* mag offsets */
-   if((counter++)%5000 == 0)
+   if(startup)
    {
-   	param_set(_parameter_handles.mag_offset[0], &(offsets(0)));
-   	param_set(_parameter_handles.mag_offset[1], &(offsets(1)));
-   	param_set(_parameter_handles.mag_offset[2], &(offsets(2)));
+	   startup = 0;
+	   math::Vector3 transformedOffsets(3);
+	   // need to transform raw into body frame
+	   param_get(_parameter_handles.mag_offset[0], &(transformedOffsets(0)));
+	   param_get(_parameter_handles.mag_offset[1], &(transformedOffsets(1)));
+	   param_get(_parameter_handles.mag_offset[2], &(transformedOffsets(2)));
+	   offsets =   _board_rotation*transformedOffsets;
+	   paramOffsets = offsets;
+
+   }
+   if((raw->timestamp - timestamp) > 10000) // do this at 100 Hz
+   {
+	   math::Vector3 xhatDot(3);
+	   math::Vector3 biasDot(3);
+	   math::Vector3 gyro = {raw->gyro_rad_s[0],raw->gyro_rad_s[1],raw->gyro_rad_s[2]};
+	   math::Vector3 mag = {raw->magnetometer_ga[0],raw->magnetometer_ga[1],raw->magnetometer_ga[2]};
+
+	   timestamp = raw->timestamp;
+
+	   // simple high pass filter, in case gyro calibration is bad
+	   avGyro = gyro*KFILT + avGyro*(1.0f - KFILT);
+	   gyro = gyro - avGyro;
+	   // low pass filter mag, so that it stays in sync with gyro
+	   //avMag = mag*KFILT + avMag*(1.0f - KFILT);
+	   //mag = avMag;
+
+	   if(fabs(gyro(0))<0.1f && fabs(gyro(1))<0.1f && fabs(gyro(3))<0.1f)
+    		return; // don't update offsets when there is no motion
+
+	   // Algorithm needs raw values, the driver corrects with the parameter offset, undo that here:
+	   mag = mag + paramOffsets;
+
+	   xhatDot = (gyro.cross(xhat-offsets)*(-1.0f)) - ((xhat-mag)*MAG_GAIN_1);
+   	   biasDot = gyro.cross(xhat-mag) * MAG_GAIN_2;
+
+   	   offsets = offsets + biasDot*MAG_DT;
+   	   xhat = xhat + xhatDot*MAG_DT;
+
+	   // update parameters every 5 seconds
+	   if((counter++)%500 == 0)
+	   {
+		   math::Vector3 transformedOffsets(3);
+		   // have calculated offsets in body frame, but driver needs raw
+		   transformedOffsets =   _board_rotation.transpose()*offsets;
+		   param_set(_parameter_handles.mag_offset[0], &(transformedOffsets(0)));
+		   param_set(_parameter_handles.mag_offset[1], &(transformedOffsets(1)));
+		   param_set(_parameter_handles.mag_offset[2], &(transformedOffsets(2)));
+		   paramOffsets = offsets;
+	   }
    }
 
 }
@@ -1652,7 +1686,7 @@ Sensors::task_main()
 		baro_poll(raw);
 
 
-		//**MagnetometerBiasExtraction(&raw);
+		MagnetometerBiasExtraction(&raw);
 
 		/* check battery voltage */
 		adc_poll(raw);

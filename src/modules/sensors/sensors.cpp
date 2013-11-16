@@ -238,6 +238,7 @@ private:
 		math::Vector3 xhat;
 		math::Vector3 paramOffsets;
 		math::Vector3 avGyro,avMag;
+		math::Vector3 gyro,mag;
 	static const unsigned _rc_max_chan_count = RC_CHANNELS_MAX;	/**< maximum number of r/c channels we handle */
 
 	hrt_abstime	_rc_last_valid;		/**< last time we got a valid RC signal */
@@ -507,6 +508,8 @@ Sensors::Sensors() :
 	paramOffsets(3),
 	avGyro(3),
 	avMag(3),
+	gyro(3),
+	mag(3),
 	_rc_last_valid(0),
 
 	_fd_adc(-1),
@@ -1517,16 +1520,17 @@ Sensors::rc_poll()
 }
 void Sensors::MagnetometerBiasExtraction(struct sensor_combined_s *raw)
 {
-#define MAG_GAIN_1 40.0f
-#define MAG_GAIN_2 0.8f
+#define MAG_GAIN_1 100.0f
+#define MAG_GAIN_2 0.5f
 #define MAG_DT (0.01f)
-#define KFILT 0.05f
+#define KFILT 0.01f
 
    static uint32_t counter = 0;
    static uint8_t startup = 1;
    static uint64_t timestamp;
+   static uint8_t sampleCount=0;
 
-   if(startup)
+   if(startup) // get initial offsets from parameter list
    {
 	   startup = 0;
 	   math::Vector3 transformedOffsets(3);
@@ -1536,14 +1540,13 @@ void Sensors::MagnetometerBiasExtraction(struct sensor_combined_s *raw)
 	   param_get(_parameter_handles.mag_offset[2], &(transformedOffsets(2)));
 	   offsets =   _board_rotation*transformedOffsets;
 	   paramOffsets = offsets;
-
    }
-   if((raw->timestamp - timestamp) > 10000) // do this at 100 Hz
+   if((raw->timestamp - timestamp) > 10000 && (sampleCount > 0)) // do this at 100 Hz
    {
 	   math::Vector3 xhatDot(3);
 	   math::Vector3 biasDot(3);
-	   math::Vector3 gyro = {raw->gyro_rad_s[0],raw->gyro_rad_s[1],raw->gyro_rad_s[2]};
-	   math::Vector3 mag = {raw->magnetometer_ga[0],raw->magnetometer_ga[1],raw->magnetometer_ga[2]};
+	   gyro = gyro / sampleCount;
+	   mag = mag / sampleCount;
 
 	   timestamp = raw->timestamp;
 
@@ -1572,11 +1575,23 @@ void Sensors::MagnetometerBiasExtraction(struct sensor_combined_s *raw)
 		   math::Vector3 transformedOffsets(3);
 		   // have calculated offsets in body frame, but driver needs raw
 		   transformedOffsets =   _board_rotation.transpose()*offsets;
-		   param_set(_parameter_handles.mag_offset[0], &(transformedOffsets(0)));
-		   param_set(_parameter_handles.mag_offset[1], &(transformedOffsets(1)));
-		   param_set(_parameter_handles.mag_offset[2], &(transformedOffsets(2)));
-		   paramOffsets = offsets;
+		   if(param_set(_parameter_handles.mag_offset[0], &(transformedOffsets(0)))==0)
+			   paramOffsets(0) = offsets(0);
+		   if(param_set(_parameter_handles.mag_offset[1], &(transformedOffsets(1)))==0)
+			   paramOffsets(1) = offsets(1);
+		   if(param_set(_parameter_handles.mag_offset[2], &(transformedOffsets(2)))==0)
+			   paramOffsets(2) = offsets(2);
 	   }
+	   gyro = {0.0f,0.0f,0.0f};
+	   mag = {0.0f,0.0f,0.0f};
+	   sampleCount = 0;
+   }
+   else
+   {
+	   // average mag and gyro between updates
+	   gyro = gyro + math::Vector3(raw->gyro_rad_s[0],raw->gyro_rad_s[1],raw->gyro_rad_s[2]);
+	   mag = mag + math::Vector3(raw->magnetometer_ga[0],raw->magnetometer_ga[1],raw->magnetometer_ga[2]);
+	   sampleCount++;
    }
 
 }

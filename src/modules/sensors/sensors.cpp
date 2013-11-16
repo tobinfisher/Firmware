@@ -1557,7 +1557,7 @@ void Sensors::MagnetometerBiasExtraction(struct sensor_combined_s *raw)
 	   //avMag = mag*KFILT + avMag*(1.0f - KFILT);
 	   //mag = avMag;
 
-	   if(!(fabs(gyro(0))<0.1f && fabs(gyro(1))<0.1f && fabs(gyro(3))<0.1f))
+	   if(!(fabs(gyro(0))<0.15f && fabs(gyro(1))<0.15f && fabs(gyro(3))<0.15f))
 	   {
 
 		   // Algorithm needs raw values, the driver corrects with the parameter offset, undo that here:

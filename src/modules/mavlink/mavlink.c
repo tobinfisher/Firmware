@@ -591,7 +591,7 @@ int mavlink_thread_main(int argc, char *argv[])
 	mavlink_wpm_init(wpm);
 
 	/* all subscriptions are now active, set up initial guess about rate limits */
-	if (baudrate >= 230400) {
+	if (FALSE && baudrate >= 230400) {
 		/* 200 Hz / 5 ms */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_HIGHRES_IMU, 20);
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_RAW_IMU, 20);
@@ -607,22 +607,22 @@ int mavlink_thread_main(int argc, char *argv[])
 
 	} else if (baudrate >= 115200) {
 		/* 20 Hz / 50 ms */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_HIGHRES_IMU, 50);
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_RAW_IMU, 50);
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_ATTITUDE, 50);
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_NAMED_VALUE_FLOAT, 50);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_HIGHRES_IMU, 50000000);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_RAW_IMU, 50000000);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_ATTITUDE, 5000000);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_NAMED_VALUE_FLOAT, 500000);
 		/* 5 Hz / 200 ms */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_SERVO_OUTPUT_RAW, 200);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_SERVO_OUTPUT_RAW, 2000000);
 		/* 5 Hz / 200 ms */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_GPS_RAW_INT, 200);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_GPS_RAW_INT, 200000000);
 		/* 2 Hz */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_MANUAL_CONTROL, 500);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_MANUAL_CONTROL, 50000000);
 
 	} else if (baudrate >= 57600) {
 		/* 10 Hz / 100 ms - TF Changed from 300 */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_RAW_IMU, 500000); //Set higher for testing magnetometer
         // TF - Changed from 500
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_HIGHRES_IMU, 200); //Set higher for calibration of sensors
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_HIGHRES_IMU, 2000000); //Set higher for calibration of sensors
 		/* 10 Hz / 100 ms ATTITUDE */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_ATTITUDE, 300);
 		/* 5 Hz / 200 ms - TF Changed from 200 */

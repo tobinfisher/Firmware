@@ -1518,8 +1518,14 @@ void Sensors::MagnetometerBiasExtraction(struct sensor_combined_s *raw)
 	// these need to be static, made them part of sensors object:
 	//Vector3 offsetsV(0.0f,0.0f,0.0f);
 	//Vector3 xhatV(0.0f,0.0f,0.0f);
+    static uint8_t startup = 1;
    static uint32_t counter = 0;
 
+    if(startup)
+    {
+        startup = 0;
+        xhat = {raw->magnetometer_ga[0],raw->magnetometer_ga[1],raw->magnetometer_ga[2]};
+    }
 	math::Vector3 xhatDot(3);
 	math::Vector3 biasDot(3);
     math::Vector3 gyro = {raw->gyro_rad_s[0],raw->gyro_rad_s[1],raw->gyro_rad_s[2]};
@@ -1532,7 +1538,7 @@ void Sensors::MagnetometerBiasExtraction(struct sensor_combined_s *raw)
    xhat = xhat + xhatDot*MAG_DT;
 
    /* mag offsets */
-   if((counter++)%500 == 0)
+   if((counter++)%5000 == 0)
    {
    	param_set(_parameter_handles.mag_offset[0], &(offsets(0)));
    	param_set(_parameter_handles.mag_offset[1], &(offsets(1)));
@@ -1646,7 +1652,7 @@ Sensors::task_main()
 		baro_poll(raw);
 
 
-		MagnetometerBiasExtraction(&raw);
+		//**MagnetometerBiasExtraction(&raw);
 
 		/* check battery voltage */
 		adc_poll(raw);

@@ -772,11 +772,11 @@ uorb_receive_start(void)
 	/* --- ATTITUDE VALUE --- */
 	mavlink_subs.att_sub = orb_subscribe(ORB_ID(vehicle_attitude));
 	/* rate limit set externally based on interface speed, set a basic default here */
-	orb_set_interval(mavlink_subs.att_sub, 200);	/* 5Hz updates */
+	orb_set_interval(mavlink_subs.att_sub, 200); /* 5Hz updates */
 
 	/* --- GPS VALUE --- */
 	mavlink_subs.gps_sub = orb_subscribe(ORB_ID(vehicle_gps_position));
-	orb_set_interval(mavlink_subs.gps_sub, 400);	/* 5Hz updates */
+	orb_set_interval(mavlink_subs.gps_sub, 400);	/* 5Hz updates */  //FIX ME BACK
 
 	/* --- HOME POSITION --- */
 	mavlink_subs.home_sub = orb_subscribe(ORB_ID(home_position));
@@ -812,7 +812,7 @@ uorb_receive_start(void)
 
 	/* --- ATTITUDE SETPOINT VALUE --- */
 	mavlink_subs.spa_sub = orb_subscribe(ORB_ID(vehicle_attitude_setpoint));
-	orb_set_interval(mavlink_subs.spa_sub, 200);	/* 0.5 Hz updates */
+	orb_set_interval(mavlink_subs.spa_sub, 200);	//Set to 50 for latency tests /* 0.5 Hz updates */
 
 	/* --- RATES SETPOINT VALUE --- */
 	mavlink_subs.rates_setpoint_sub = orb_subscribe(ORB_ID(vehicle_rates_setpoint));

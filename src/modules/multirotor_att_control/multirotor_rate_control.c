@@ -59,7 +59,7 @@
 #include <systemlib/err.h>
 #include <drivers/drv_hrt.h>
 
-PARAM_DEFINE_FLOAT(MC_YAWRATE_P, 0.866f); /* same on Flamewheel */
+PARAM_DEFINE_FLOAT(MC_YAWRATE_P, 0.086f); /* same on Flamewheel */
 PARAM_DEFINE_FLOAT(MC_YAWRATE_D, 0.000f);
 PARAM_DEFINE_FLOAT(MC_YAWRATE_I, 0.0f);
 //PARAM_DEFINE_FLOAT(MC_YAWRATE_AWU, 0.0f);

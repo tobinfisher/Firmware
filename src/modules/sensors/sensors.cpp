@@ -1557,31 +1557,33 @@ void Sensors::MagnetometerBiasExtraction(struct sensor_combined_s *raw)
 	   //avMag = mag*KFILT + avMag*(1.0f - KFILT);
 	   //mag = avMag;
 
-	   if(fabs(gyro(0))<0.1f && fabs(gyro(1))<0.1f && fabs(gyro(3))<0.1f)
-    		return; // don't update offsets when there is no motion
-
-	   // Algorithm needs raw values, the driver corrects with the parameter offset, undo that here:
-	   mag = mag + paramOffsets;
-
-	   xhatDot = (gyro.cross(xhat-offsets)*(-1.0f)) - ((xhat-mag)*MAG_GAIN_1);
-   	   biasDot = gyro.cross(xhat-mag) * MAG_GAIN_2;
-
-   	   offsets = offsets + biasDot*MAG_DT;
-   	   xhat = xhat + xhatDot*MAG_DT;
-
-	   // update parameters every 5 seconds
-	   if((counter++)%500 == 0)
+	   if(!(fabs(gyro(0))<0.1f && fabs(gyro(1))<0.1f && fabs(gyro(3))<0.1f))
 	   {
-		   math::Vector3 transformedOffsets(3);
-		   // have calculated offsets in body frame, but driver needs raw
-		   transformedOffsets =   _board_rotation.transpose()*offsets;
-		   if(param_set(_parameter_handles.mag_offset[0], &(transformedOffsets(0)))==0)
-			   paramOffsets(0) = offsets(0);
-		   if(param_set(_parameter_handles.mag_offset[1], &(transformedOffsets(1)))==0)
-			   paramOffsets(1) = offsets(1);
-		   if(param_set(_parameter_handles.mag_offset[2], &(transformedOffsets(2)))==0)
-			   paramOffsets(2) = offsets(2);
+
+		   // Algorithm needs raw values, the driver corrects with the parameter offset, undo that here:
+		   mag = mag + paramOffsets;
+
+		   xhatDot = (gyro.cross(xhat-offsets)*(-1.0f)) - ((xhat-mag)*MAG_GAIN_1);
+		   biasDot = gyro.cross(xhat-mag) * MAG_GAIN_2;
+
+		   offsets = offsets + biasDot*MAG_DT;
+		   xhat = xhat + xhatDot*MAG_DT;
+
+		   // update parameters every 5 seconds
+		   if((counter++)%500 == 0)
+		   {
+			   math::Vector3 transformedOffsets(3);
+			   // have calculated offsets in body frame, but driver needs raw
+			   transformedOffsets =   _board_rotation.transpose()*offsets;
+			   if(param_set(_parameter_handles.mag_offset[0], &(transformedOffsets(0)))==0)
+				   paramOffsets(0) = offsets(0);
+			   if(param_set(_parameter_handles.mag_offset[1], &(transformedOffsets(1)))==0)
+				   paramOffsets(1) = offsets(1);
+			   if(param_set(_parameter_handles.mag_offset[2], &(transformedOffsets(2)))==0)
+				   paramOffsets(2) = offsets(2);
+		   }
 	   }
+
 	   gyro = {0.0f,0.0f,0.0f};
 	   mag = {0.0f,0.0f,0.0f};
 	   sampleCount = 0;

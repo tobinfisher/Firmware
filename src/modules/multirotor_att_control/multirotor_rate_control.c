@@ -62,29 +62,22 @@
 PARAM_DEFINE_FLOAT(MC_YAWRATE_P, 0.086f); /* same on Flamewheel */
 PARAM_DEFINE_FLOAT(MC_YAWRATE_D, 0.000f);
 PARAM_DEFINE_FLOAT(MC_YAWRATE_I, 0.0f);
-//PARAM_DEFINE_FLOAT(MC_YAWRATE_AWU, 0.0f);
-//PARAM_DEFINE_FLOAT(MC_YAWRATE_LIM, 1.0f);
+
 PARAM_DEFINE_FLOAT(MC_ROLLRATE_S, 1.0f);
 PARAM_DEFINE_FLOAT(MC_ATTRATE_P, 0.0666f); /* 0.15 F405 Flamewheel */
 PARAM_DEFINE_FLOAT(MC_ATTRATE_D, 0.0026f);
 PARAM_DEFINE_FLOAT(MC_ATTRATE_I, 0.0f);
-//PARAM_DEFINE_FLOAT(MC_ATTRATE_AWU, 0.05f);
-//PARAM_DEFINE_FLOAT(MC_ATTRATE_LIM, 1.0f);	/**< roughly < 500 deg/s limit */
 
 struct mc_rate_control_params {
 
 	float yawrate_p;
 	float yawrate_d;
 	float yawrate_i;
-	//float yawrate_awu;
-	//float yawrate_lim;
 
 	float rollrate_scale;
 	float attrate_p;
 	float attrate_d;
 	float attrate_i;
-	//float attrate_awu;
-	//float attrate_lim;
 
 	float rate_lim;
 };
@@ -94,15 +87,11 @@ struct mc_rate_control_param_handles {
 	param_t yawrate_p;
 	param_t yawrate_i;
 	param_t yawrate_d;
-	//param_t yawrate_awu;
-	//param_t yawrate_lim;
 
 	param_t rollrate_scale;
 	param_t attrate_p;
 	param_t attrate_i;
 	param_t attrate_d;
-	//param_t attrate_awu;
-	//param_t attrate_lim;
 };
 
 /**
@@ -124,15 +113,11 @@ static int parameters_init(struct mc_rate_control_param_handles *h)
 	h->yawrate_p 	=	param_find("MC_YAWRATE_P");
 	h->yawrate_i 	=	param_find("MC_YAWRATE_I");
 	h->yawrate_d 	=	param_find("MC_YAWRATE_D");
-	//h->yawrate_awu 	=	param_find("MC_YAWRATE_AWU");
-	//h->yawrate_lim 	=	param_find("MC_YAWRATE_LIM");
 
 	h->rollrate_scale = param_find("MC_ROLLRATE_S");
 	h->attrate_p 	= 	param_find("MC_ATTRATE_P");
 	h->attrate_i 	= 	param_find("MC_ATTRATE_I");
 	h->attrate_d 	= 	param_find("MC_ATTRATE_D");
-	//h->attrate_awu 	= 	param_find("MC_ATTRATE_AWU");
-	//h->attrate_lim 	= 	param_find("MC_ATTRATE_LIM");
 
 	return OK;
 }
@@ -142,15 +127,11 @@ static int parameters_update(const struct mc_rate_control_param_handles *h, stru
 	param_get(h->yawrate_p, &(p->yawrate_p));
 	param_get(h->yawrate_i, &(p->yawrate_i));
 	param_get(h->yawrate_d, &(p->yawrate_d));
-	//param_get(h->yawrate_awu, &(p->yawrate_awu));
-	//param_get(h->yawrate_lim, &(p->yawrate_lim));
 
 	param_get(h->rollrate_scale, &(p->rollrate_scale));
 	param_get(h->attrate_p, &(p->attrate_p));
 	param_get(h->attrate_i, &(p->attrate_i));
 	param_get(h->attrate_d, &(p->attrate_d));
-	//param_get(h->attrate_awu, &(p->attrate_awu));
-	//param_get(h->attrate_lim, &(p->attrate_lim));
 
 	return OK;
 }
@@ -172,6 +153,7 @@ void multirotor_control_rates(const struct vehicle_rates_setpoint_s *rate_sp,
 
 	static PID_t pitch_rate_controller;
 	static PID_t roll_rate_controller;
+	static PID_t yaw_rate_controller;
 
 	static struct mc_rate_control_params p;
 	static struct mc_rate_control_param_handles h;
@@ -186,6 +168,7 @@ void multirotor_control_rates(const struct vehicle_rates_setpoint_s *rate_sp,
 
 		pid_init(&pitch_rate_controller, p.attrate_p, p.attrate_i, p.attrate_d, 1.0f, 1.0f, PID_MODE_DERIVATIV_CALC_NO_SP, 0.003f);
 		pid_init(&roll_rate_controller, p.attrate_p*p.rollrate_scale, p.attrate_i*p.rollrate_scale, p.attrate_d*p.rollrate_scale, 1.0f, 1.0f, PID_MODE_DERIVATIV_CALC_NO_SP, 0.003f);
+		pid_init(&yaw_rate_controller, p.yawrate_p, p.yawrate_i, p.yawrate_d, 1.0f, 1.0f, PID_MODE_DERIVATIV_CALC_NO_SP, 0.003f);
 
 	}
 
@@ -194,36 +177,27 @@ void multirotor_control_rates(const struct vehicle_rates_setpoint_s *rate_sp,
 		/* update parameters from storage */
 		parameters_update(&h, &p);
 		pid_set_parameters(&pitch_rate_controller, p.attrate_p, p.attrate_i, p.attrate_d, 1.0f, 1.0f);
+
 		pid_set_parameters(&roll_rate_controller,  p.attrate_p*p.rollrate_scale, p.attrate_i*p.rollrate_scale, p.attrate_d*p.rollrate_scale, 1.0f, 1.0f);
+		pid_set_parameters(&yaw_rate_controller,  p.yawrate_p, p.yawrate_i, p.yawrate_d, 1.0f, 1.0f);
+
 	}
 
 	/* reset integrals if needed */
 	if (reset_integral) {
 		pid_reset_integral(&pitch_rate_controller);
 		pid_reset_integral(&roll_rate_controller);
-		// TODO pid_reset_integral(&yaw_rate_controller);
+		pid_reset_integral(&yaw_rate_controller);
 	}
 
-	/* control pitch (forward) output */
-	float pitch_control = pid_calculate(&pitch_rate_controller, rate_sp->pitch ,
-					    rates[1], 0.0f, deltaT);
-
-	/* control roll (left/right) output */
-	float roll_control = pid_calculate(&roll_rate_controller, rate_sp->roll ,
-					   rates[0], 0.0f, deltaT);
-
-	/* control yaw rate */ //XXX use library here
-	float yaw_rate_control = p.yawrate_p * (rate_sp->yaw - rates[2]);
-
-	/* increase resilience to faulty control inputs */
-	if (!isfinite(yaw_rate_control)) {
-		yaw_rate_control = 0.0f;
-		warnx("rej. NaN ctrl yaw");
-	}
+	/* run pitch, roll and yaw controllers */
+	float pitch_control = pid_calculate(&pitch_rate_controller, rate_sp->pitch, rates[1], 0.0f, deltaT);
+	float roll_control = pid_calculate(&roll_rate_controller, rate_sp->roll, rates[0], 0.0f, deltaT);
+	float yaw_control = pid_calculate(&yaw_rate_controller, rate_sp->yaw, rates[2], 0.0f, deltaT);
 
 	actuators->control[0] = roll_control;
 	actuators->control[1] = pitch_control;
-	actuators->control[2] = yaw_rate_control;
+	actuators->control[2] = yaw_control;
 	actuators->control[3] = rate_sp->thrust;
 
 	motor_skip_counter++;

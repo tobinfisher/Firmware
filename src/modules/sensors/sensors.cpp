@@ -1703,7 +1703,7 @@ Sensors::task_main()
 		baro_poll(raw);
 
 
-		MagnetometerBiasExtraction(&raw);
+		//MagnetometerBiasExtraction(&raw);
 
 		/* check battery voltage */
 		adc_poll(raw);

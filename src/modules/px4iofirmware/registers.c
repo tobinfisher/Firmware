@@ -295,13 +295,13 @@ registers_set(uint8_t page, uint8_t offset, const uint16_t *values, unsigned num
 		}
 		break;
 
-	case PX4IO_PAGE_CONTROL_MIN_PWM:
+	/*case PX4IO_PAGE_CONTROL_MIN_PWM:
 
-		/* copy channel data */
+		// copy channel data
 		while ((offset < PX4IO_SERVO_COUNT) && (num_values > 0)) {
 
 			if (*values == 0) {
-				/* ignore 0 */
+				// ignore 0
 			} else if (*values > PWM_HIGHEST_MIN) {
 				r_page_servo_control_min[offset] = PWM_HIGHEST_MIN;
 			} else if (*values < PWM_LOWEST_MIN) {
@@ -314,7 +314,7 @@ registers_set(uint8_t page, uint8_t offset, const uint16_t *values, unsigned num
 			num_values--;
 			values++;
 		}
-		break;
+		break;*/
 	
 	case PX4IO_PAGE_CONTROL_MAX_PWM:
 

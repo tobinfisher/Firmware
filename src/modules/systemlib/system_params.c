@@ -41,7 +41,7 @@
 #include <systemlib/param/param.h>
 
 // Auto-start script with index #n
-PARAM_DEFINE_INT32(SYS_AUTOSTART, 1);
+PARAM_DEFINE_INT32(SYS_AUTOSTART, 49);
 
 // Automatically configure default values
-PARAM_DEFINE_INT32(SYS_AUTOCONFIG, 9);
+PARAM_DEFINE_INT32(SYS_AUTOCONFIG, 1);

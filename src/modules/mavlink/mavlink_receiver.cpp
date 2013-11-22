@@ -144,7 +144,7 @@ handle_message(mavlink_message_t *msg)
 {
     if (mavlink_fd == 0) mavlink_fd = open(MAVLINK_LOG_DEVICE, 0);
     
-    mavlink_log_info(mavlink_fd, "Message id = %i", msg->msgid);
+    //mavlink_log_info(mavlink_fd, "Message id = %i", msg->msgid);
     
     if (msg->msgid == MAVLINK_MSG_ID_COMMAND_LONG) {
 

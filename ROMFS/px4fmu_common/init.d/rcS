@@ -308,6 +308,12 @@ then
 		sh /etc/init.d/40_io_segway
 		set MODE custom
 	fi
+    
+    if param compare SYS_AUTOSTART 49
+	then
+		sh /etc/init.d/49_sliver
+		set MODE custom
+	fi
 	
 	if param compare SYS_AUTOSTART 100
 	then

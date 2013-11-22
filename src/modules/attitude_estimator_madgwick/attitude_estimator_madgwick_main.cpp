@@ -36,7 +36,7 @@
 /*
  * @file attitude_estimator_ekf_main.c
  *
- * Extended Kalman Filter for Attitude Estimation.
+ * Madgwick Filter for Attitude Estimation.
  */
 
 #include <nuttx/config.h>
@@ -58,7 +58,7 @@
 #include <uORB/topics/debug_key_value.h>
 #include <uORB/topics/sensor_combined.h>
 #include <uORB/topics/vehicle_attitude.h>
-#include <uORB/topics/vehicle_status.h>
+#include <uORB/topics/vehicle_control_mode.h>
 #include <uORB/topics/parameter_update.h>
 #include <drivers/drv_hrt.h>
 
@@ -99,7 +99,7 @@ usage(const char *reason)
 	if (reason)
 		fprintf(stderr, "%s\n", reason);
 
-	fprintf(stderr, "usage: attitude_estimator_ekf {start|stop|status} [-p <additional params>]\n\n");
+	fprintf(stderr, "usage: attitude_estimator_madgwick {start|stop|status} [-p <additional params>]\n\n");
 	exit(1);
 }
 
@@ -119,7 +119,7 @@ int attitude_estimator_madgwick_main(int argc, char *argv[])
 	if (!strcmp(argv[1], "start")) {
 
 		if (thread_running) {
-			printf("attitude_estimator_ekf already running\n");
+			printf("attitude_estimator_madgwick already running\n");
 			/* this is not an error */
 			exit(0);
 		}
@@ -184,8 +184,9 @@ float z_k[9];
 
 	// print text
 	printf("Madgwick Filter Attitude Estimator initialized..\n\n");
-	fflush(stdout);
 
+   fflush(stdout);
+    
 	int overloadcounter = 19;
 
 	/* Initialize filter */
@@ -198,8 +199,8 @@ float z_k[9];
 	memset(&raw, 0, sizeof(raw));
 	struct vehicle_attitude_s att;
 	memset(&att, 0, sizeof(att));
-	struct vehicle_status_s state;
-	memset(&state, 0, sizeof(state));
+	struct vehicle_control_mode_s control_mode;
+	memset(&control_mode, 0, sizeof(control_mode));
 
 	uint64_t last_data = 0;
 	uint64_t last_measurement = 0;
@@ -213,7 +214,7 @@ float z_k[9];
 	int sub_params = orb_subscribe(ORB_ID(parameter_update));
 
 	/* subscribe to system state*/
-	int sub_state = orb_subscribe(ORB_ID(vehicle_status));
+	int sub_control_mode = orb_subscribe(ORB_ID(vehicle_control_mode));
 
 	/* advertise attitude */
 	orb_advert_t pub_att = orb_advertise(ORB_ID(vehicle_attitude), &att);
@@ -263,9 +264,15 @@ float z_k[9];
 
 		if (ret < 0) {
 			/* XXX this is seriously bad - should be an emergency */
+            printf("[ATT_EST_MADG ERROR] RET < 0");
 		} else if (ret == 0) {
 			/* check if we're in HIL - not getting sensor data is fine then */
-			orb_copy(ORB_ID(vehicle_status), sub_state, &state);
+			orb_copy(ORB_ID(vehicle_control_mode), sub_control_mode, &control_mode);
+            
+            if (!control_mode.flag_system_hil_enabled) {
+				fprintf(stderr,
+                        "[att madg] WARNING: Not getting sensors - sensor app running?\n");
+			}
 
 		} else {
 
@@ -277,6 +284,7 @@ float z_k[9];
 
 				/* update parameters */
 				parameters_update(&madgwick_param_handles, &madgwick_params);
+                
 			}
 
 			/* only run filter if sensor values changed */
@@ -360,9 +368,10 @@ float z_k[9];
 					}
 
 					static bool const_initialized = false;
+                    
 
 					/* initialize with good values once we have a reasonable dt estimate */
-					if (!const_initialized && dt < 0.05f && dt > 0.005f) {
+					if (!const_initialized && dt < 0.05f && dt > 0.003f) {
 						dt = 0.005f;
 						parameters_update(&madgwick_param_handles, &madgwick_params);
 
@@ -370,12 +379,14 @@ float z_k[9];
 
 						const_initialized = true;
 					}
+                    
 
 					/* do not execute the filter if not initialized */
 					if (!const_initialized) {
 						continue;
 					}
 
+                    
 					uint64_t timing_start = hrt_absolute_time();
 
 					//attitudeKalmanfilter(update_vect, dt, z_k, x_aposteriori_k, P_aposteriori_k, ekf_params.q, ekf_params.r,
@@ -398,7 +409,7 @@ float z_k[9];
 						continue;
 					}
 
-					if (last_data > 0 && raw.timestamp - last_data > 12000) printf("[attitude estimator ekf] sensor data missed! (%llu)\n", raw.timestamp - last_data);
+					if (last_data > 0 && raw.timestamp - last_data > 12000) printf("[attitude estimator madg] sensor data missed! (%llu)\n", raw.timestamp - last_data);
 
 					last_data = raw.timestamp;
 
@@ -430,6 +441,8 @@ float z_k[9];
 					for (int i = 0; i < 4; i++) att.q[i] = q(i);
 
 					att.R_valid = true;
+                    
+                    printf("5\n");
 
 					if (isfinite(att.roll) && isfinite(att.pitch) && isfinite(att.yaw)) {
 						// Broadcast

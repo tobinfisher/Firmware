@@ -364,9 +364,6 @@ void handle_command(struct vehicle_status_s *status, const struct safety_s *safe
 			uint8_t base_mode = (uint8_t) cmd->param1;
 			uint8_t custom_main_mode = (uint8_t) cmd->param2;
 			transition_result_t arming_res = TRANSITION_NOT_CHANGED;
-        
-        
-        mavlink_log_info(mavlink_fd, "[cmd] got message to handle command");
 
 			/* set HIL state */
 			hil_state_t new_hil_state = (base_mode & MAV_MODE_FLAG_HIL_ENABLED) ? HIL_STATE_ON : HIL_STATE_OFF;

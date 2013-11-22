@@ -7,13 +7,179 @@
 	objects = {
 
 /* Begin PBXFileReference section */
+		34683B6C183AE8C500158E32 /* 08_ardrone */ = {isa = PBXFileReference; lastKnownFileType = text; path = 08_ardrone; sourceTree = "<group>"; };
+		34683B6D183AE8C500158E32 /* 09_ardrone_flow */ = {isa = PBXFileReference; lastKnownFileType = text; path = 09_ardrone_flow; sourceTree = "<group>"; };
+		34683B6E183AE8C500158E32 /* 1000_rc_fw_easystar.hil */ = {isa = PBXFileReference; lastKnownFileType = text; path = 1000_rc_fw_easystar.hil; sourceTree = "<group>"; };
+		34683B6F183AE8C500158E32 /* 1001_rc_quad.hil */ = {isa = PBXFileReference; lastKnownFileType = text; path = 1001_rc_quad.hil; sourceTree = "<group>"; };
+		34683B70183AE8C500158E32 /* 1002_rc_fw_state.hil */ = {isa = PBXFileReference; lastKnownFileType = text; path = 1002_rc_fw_state.hil; sourceTree = "<group>"; };
+		34683B71183AE8C500158E32 /* 1003_rc_quad_+.hil */ = {isa = PBXFileReference; lastKnownFileType = text; path = "1003_rc_quad_+.hil"; sourceTree = "<group>"; };
+		34683B72183AE8C500158E32 /* 1004_rc_fw_Rascal110.hil */ = {isa = PBXFileReference; lastKnownFileType = text; path = 1004_rc_fw_Rascal110.hil; sourceTree = "<group>"; };
+		34683B73183AE8C500158E32 /* 100_mpx_easystar */ = {isa = PBXFileReference; lastKnownFileType = text; path = 100_mpx_easystar; sourceTree = "<group>"; };
+		34683B74183AE8C500158E32 /* 101_hk_bixler */ = {isa = PBXFileReference; lastKnownFileType = text; path = 101_hk_bixler; sourceTree = "<group>"; };
+		34683B75183AE8C500158E32 /* 10_dji_f330 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 10_dji_f330; sourceTree = "<group>"; };
+		34683B76183AE8C500158E32 /* 11_dji_f450 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 11_dji_f450; sourceTree = "<group>"; };
+		34683B77183AE8C500158E32 /* 12-13_hex */ = {isa = PBXFileReference; lastKnownFileType = text; path = "12-13_hex"; sourceTree = "<group>"; };
+		34683B78183AE8C500158E32 /* 15_tbs_discovery */ = {isa = PBXFileReference; lastKnownFileType = text; path = 15_tbs_discovery; sourceTree = "<group>"; };
+		34683B79183AE8C500158E32 /* 16_3dr_iris */ = {isa = PBXFileReference; lastKnownFileType = text; path = 16_3dr_iris; sourceTree = "<group>"; };
+		34683B7A183AE8C500158E32 /* 30_io_camflyer */ = {isa = PBXFileReference; lastKnownFileType = text; path = 30_io_camflyer; sourceTree = "<group>"; };
+		34683B7B183AE8C500158E32 /* 31_io_phantom */ = {isa = PBXFileReference; lastKnownFileType = text; path = 31_io_phantom; sourceTree = "<group>"; };
+		34683B7C183AE8C500158E32 /* 32_skywalker_x5 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 32_skywalker_x5; sourceTree = "<group>"; };
+		34683B7D183AE8C500158E32 /* 40_io_segway */ = {isa = PBXFileReference; lastKnownFileType = text; path = 40_io_segway; sourceTree = "<group>"; };
+		34683B7E183AE8C500158E32 /* 55_rev */ = {isa = PBXFileReference; lastKnownFileType = text; path = 55_rev; sourceTree = "<group>"; };
+		34683B7F183AE8C500158E32 /* 666_fmu_q_x550 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 666_fmu_q_x550; sourceTree = "<group>"; };
+		34683B80183AE8C500158E32 /* cmp_test */ = {isa = PBXFileReference; lastKnownFileType = text; path = cmp_test; sourceTree = "<group>"; };
+		34683B81183AE8C500158E32 /* rc.custom_dji_f330_mkblctrl */ = {isa = PBXFileReference; lastKnownFileType = text; path = rc.custom_dji_f330_mkblctrl; sourceTree = "<group>"; };
+		34683B82183AE8C500158E32 /* rc.custom_io_esc */ = {isa = PBXFileReference; lastKnownFileType = text; path = rc.custom_io_esc; sourceTree = "<group>"; };
+		34683B83183AE8C500158E32 /* rc.fixedwing */ = {isa = PBXFileReference; lastKnownFileType = text; path = rc.fixedwing; sourceTree = "<group>"; };
+		34683B84183AE8C500158E32 /* rc.io */ = {isa = PBXFileReference; lastKnownFileType = text; path = rc.io; sourceTree = "<group>"; };
+		34683B85183AE8C500158E32 /* rc.jig */ = {isa = PBXFileReference; lastKnownFileType = text; path = rc.jig; sourceTree = "<group>"; };
+		34683B86183AE8C500158E32 /* rc.logging */ = {isa = PBXFileReference; lastKnownFileType = text; path = rc.logging; sourceTree = "<group>"; };
+		34683B87183AE8C500158E32 /* rc.multirotor */ = {isa = PBXFileReference; lastKnownFileType = text; path = rc.multirotor; sourceTree = "<group>"; };
+		34683B88183AE8C500158E32 /* rc.sensors */ = {isa = PBXFileReference; lastKnownFileType = text; path = rc.sensors; sourceTree = "<group>"; };
+		34683B89183AE8C500158E32 /* rc.standalone */ = {isa = PBXFileReference; lastKnownFileType = text; path = rc.standalone; sourceTree = "<group>"; };
+		34683B8A183AE8C500158E32 /* rc.usb */ = {isa = PBXFileReference; lastKnownFileType = text; path = rc.usb; sourceTree = "<group>"; };
+		34683B8B183AE8C500158E32 /* rcS */ = {isa = PBXFileReference; lastKnownFileType = text; path = rcS; sourceTree = "<group>"; };
+		34683B8D183AE8C500158E32 /* conv.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; path = conv.zip; sourceTree = "<group>"; };
+		34683B8F183AE8C500158E32 /* FMU_AERT.mix */ = {isa = PBXFileReference; lastKnownFileType = text; path = FMU_AERT.mix; sourceTree = "<group>"; };
+		34683B90183AE8C500158E32 /* FMU_AET.mix */ = {isa = PBXFileReference; lastKnownFileType = text; path = FMU_AET.mix; sourceTree = "<group>"; };
+		34683B91183AE8C500158E32 /* FMU_CCPM.mix */ = {isa = PBXFileReference; lastKnownFileType = text; path = FMU_CCPM.mix; sourceTree = "<group>"; };
+		34683B92183AE8C500158E32 /* FMU_delta.mix */ = {isa = PBXFileReference; lastKnownFileType = text; path = FMU_delta.mix; sourceTree = "<group>"; };
+		34683B93183AE8C500158E32 /* FMU_hex_+.mix */ = {isa = PBXFileReference; lastKnownFileType = text; path = "FMU_hex_+.mix"; sourceTree = "<group>"; };
+		34683B94183AE8C500158E32 /* FMU_hex_x.mix */ = {isa = PBXFileReference; lastKnownFileType = text; path = FMU_hex_x.mix; sourceTree = "<group>"; };
+		34683B95183AE8C500158E32 /* FMU_octo_+.mix */ = {isa = PBXFileReference; lastKnownFileType = text; path = "FMU_octo_+.mix"; sourceTree = "<group>"; };
+		34683B96183AE8C500158E32 /* FMU_octo_cox.mix */ = {isa = PBXFileReference; lastKnownFileType = text; path = FMU_octo_cox.mix; sourceTree = "<group>"; };
+		34683B97183AE8C500158E32 /* FMU_octo_x.mix */ = {isa = PBXFileReference; lastKnownFileType = text; path = FMU_octo_x.mix; sourceTree = "<group>"; };
+		34683B98183AE8C500158E32 /* FMU_pass.mix */ = {isa = PBXFileReference; lastKnownFileType = text; path = FMU_pass.mix; sourceTree = "<group>"; };
+		34683B99183AE8C500158E32 /* FMU_Q.mix */ = {isa = PBXFileReference; lastKnownFileType = text; path = FMU_Q.mix; sourceTree = "<group>"; };
+		34683B9A183AE8C500158E32 /* FMU_quad_+.mix */ = {isa = PBXFileReference; lastKnownFileType = text; path = "FMU_quad_+.mix"; sourceTree = "<group>"; };
+		34683B9B183AE8C500158E32 /* FMU_quad_v.mix */ = {isa = PBXFileReference; lastKnownFileType = text; path = FMU_quad_v.mix; sourceTree = "<group>"; };
+		34683B9C183AE8C500158E32 /* FMU_quad_w.mix */ = {isa = PBXFileReference; lastKnownFileType = text; path = FMU_quad_w.mix; sourceTree = "<group>"; };
+		34683B9D183AE8C500158E32 /* FMU_quad_x.mix */ = {isa = PBXFileReference; lastKnownFileType = text; path = FMU_quad_x.mix; sourceTree = "<group>"; };
+		34683B9E183AE8C500158E32 /* FMU_RET.mix */ = {isa = PBXFileReference; lastKnownFileType = text; path = FMU_RET.mix; sourceTree = "<group>"; };
+		34683B9F183AE8C500158E32 /* FMU_X5.mix */ = {isa = PBXFileReference; lastKnownFileType = text; path = FMU_X5.mix; sourceTree = "<group>"; };
+		34683BA0183AE8C500158E32 /* IO_pass.mix */ = {isa = PBXFileReference; lastKnownFileType = text; path = IO_pass.mix; sourceTree = "<group>"; };
+		34683BA1183AE8C500158E32 /* README */ = {isa = PBXFileReference; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
+		34683BA4183AE8C500158E32 /* rc.standalone */ = {isa = PBXFileReference; lastKnownFileType = text; path = rc.standalone; sourceTree = "<group>"; };
+		34683BA5183AE8C500158E32 /* rcS */ = {isa = PBXFileReference; lastKnownFileType = text; path = rcS; sourceTree = "<group>"; };
+		34978C1D183EDCD600ABC9B5 /* 49_sliver */ = {isa = PBXFileReference; lastKnownFileType = text; path = 49_sliver; sourceTree = "<group>"; };
 		349E6B2A17DE7BE700944AF8 /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; path = src; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		34683B69183AE8C500158E32 /* ROMFS */ = {
+			isa = PBXGroup;
+			children = (
+				34683B6A183AE8C500158E32 /* px4fmu_common */,
+				34683BA2183AE8C500158E32 /* px4fmu_test */,
+			);
+			path = ROMFS;
+			sourceTree = "<group>";
+		};
+		34683B6A183AE8C500158E32 /* px4fmu_common */ = {
+			isa = PBXGroup;
+			children = (
+				34683B6B183AE8C500158E32 /* init.d */,
+				34683B8C183AE8C500158E32 /* logging */,
+				34683B8E183AE8C500158E32 /* mixers */,
+			);
+			path = px4fmu_common;
+			sourceTree = "<group>";
+		};
+		34683B6B183AE8C500158E32 /* init.d */ = {
+			isa = PBXGroup;
+			children = (
+				34683B6C183AE8C500158E32 /* 08_ardrone */,
+				34683B6D183AE8C500158E32 /* 09_ardrone_flow */,
+				34683B6E183AE8C500158E32 /* 1000_rc_fw_easystar.hil */,
+				34683B6F183AE8C500158E32 /* 1001_rc_quad.hil */,
+				34683B70183AE8C500158E32 /* 1002_rc_fw_state.hil */,
+				34683B71183AE8C500158E32 /* 1003_rc_quad_+.hil */,
+				34683B72183AE8C500158E32 /* 1004_rc_fw_Rascal110.hil */,
+				34683B73183AE8C500158E32 /* 100_mpx_easystar */,
+				34683B74183AE8C500158E32 /* 101_hk_bixler */,
+				34683B75183AE8C500158E32 /* 10_dji_f330 */,
+				34683B76183AE8C500158E32 /* 11_dji_f450 */,
+				34683B77183AE8C500158E32 /* 12-13_hex */,
+				34683B78183AE8C500158E32 /* 15_tbs_discovery */,
+				34683B79183AE8C500158E32 /* 16_3dr_iris */,
+				34683B7A183AE8C500158E32 /* 30_io_camflyer */,
+				34683B7B183AE8C500158E32 /* 31_io_phantom */,
+				34683B7C183AE8C500158E32 /* 32_skywalker_x5 */,
+				34683B7D183AE8C500158E32 /* 40_io_segway */,
+				34683B7E183AE8C500158E32 /* 55_rev */,
+				34978C1D183EDCD600ABC9B5 /* 49_sliver */,
+				34683B7F183AE8C500158E32 /* 666_fmu_q_x550 */,
+				34683B80183AE8C500158E32 /* cmp_test */,
+				34683B81183AE8C500158E32 /* rc.custom_dji_f330_mkblctrl */,
+				34683B82183AE8C500158E32 /* rc.custom_io_esc */,
+				34683B83183AE8C500158E32 /* rc.fixedwing */,
+				34683B84183AE8C500158E32 /* rc.io */,
+				34683B85183AE8C500158E32 /* rc.jig */,
+				34683B86183AE8C500158E32 /* rc.logging */,
+				34683B87183AE8C500158E32 /* rc.multirotor */,
+				34683B88183AE8C500158E32 /* rc.sensors */,
+				34683B89183AE8C500158E32 /* rc.standalone */,
+				34683B8A183AE8C500158E32 /* rc.usb */,
+				34683B8B183AE8C500158E32 /* rcS */,
+			);
+			path = init.d;
+			sourceTree = "<group>";
+		};
+		34683B8C183AE8C500158E32 /* logging */ = {
+			isa = PBXGroup;
+			children = (
+				34683B8D183AE8C500158E32 /* conv.zip */,
+			);
+			path = logging;
+			sourceTree = "<group>";
+		};
+		34683B8E183AE8C500158E32 /* mixers */ = {
+			isa = PBXGroup;
+			children = (
+				34683B8F183AE8C500158E32 /* FMU_AERT.mix */,
+				34683B90183AE8C500158E32 /* FMU_AET.mix */,
+				34683B91183AE8C500158E32 /* FMU_CCPM.mix */,
+				34683B92183AE8C500158E32 /* FMU_delta.mix */,
+				34683B93183AE8C500158E32 /* FMU_hex_+.mix */,
+				34683B94183AE8C500158E32 /* FMU_hex_x.mix */,
+				34683B95183AE8C500158E32 /* FMU_octo_+.mix */,
+				34683B96183AE8C500158E32 /* FMU_octo_cox.mix */,
+				34683B97183AE8C500158E32 /* FMU_octo_x.mix */,
+				34683B98183AE8C500158E32 /* FMU_pass.mix */,
+				34683B99183AE8C500158E32 /* FMU_Q.mix */,
+				34683B9A183AE8C500158E32 /* FMU_quad_+.mix */,
+				34683B9B183AE8C500158E32 /* FMU_quad_v.mix */,
+				34683B9C183AE8C500158E32 /* FMU_quad_w.mix */,
+				34683B9D183AE8C500158E32 /* FMU_quad_x.mix */,
+				34683B9E183AE8C500158E32 /* FMU_RET.mix */,
+				34683B9F183AE8C500158E32 /* FMU_X5.mix */,
+				34683BA0183AE8C500158E32 /* IO_pass.mix */,
+				34683BA1183AE8C500158E32 /* README */,
+			);
+			path = mixers;
+			sourceTree = "<group>";
+		};
+		34683BA2183AE8C500158E32 /* px4fmu_test */ = {
+			isa = PBXGroup;
+			children = (
+				34683BA3183AE8C500158E32 /* init.d */,
+			);
+			path = px4fmu_test;
+			sourceTree = "<group>";
+		};
+		34683BA3183AE8C500158E32 /* init.d */ = {
+			isa = PBXGroup;
+			children = (
+				34683BA4183AE8C500158E32 /* rc.standalone */,
+				34683BA5183AE8C500158E32 /* rcS */,
+			);
+			path = init.d;
+			sourceTree = "<group>";
+		};
 		349E6B1317DE7BE700944AF8 = {
 			isa = PBXGroup;
 			children = (
+				34683B69183AE8C500158E32 /* ROMFS */,
 				349E6B2A17DE7BE700944AF8 /* src */,
 			);
 			sourceTree = "<group>";

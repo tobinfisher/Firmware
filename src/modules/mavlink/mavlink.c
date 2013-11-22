@@ -622,15 +622,15 @@ int mavlink_thread_main(int argc, char *argv[])
 		/* 10 Hz / 100 ms - TF Changed from 300 */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_RAW_IMU, 500000); //Set higher for testing magnetometer
         // TF - Changed from 500
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_HIGHRES_IMU, 2000000); //Set higher for calibration of sensors
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_HIGHRES_IMU, 500000); //Set higher for calibration of sensors, also causes servo output raw messages and longer setpoint messages to be sent
 		/* 10 Hz / 100 ms ATTITUDE */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_ATTITUDE, 300);
 		/* 5 Hz / 200 ms - TF Changed from 200 */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_NAMED_VALUE_FLOAT, 500);
 		/* 5 Hz / 200 ms Changed from 500 */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_SERVO_OUTPUT_RAW, 200000); //modified this method so it doesn't impact rate of sending setpoint messages
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_SERVO_OUTPUT_RAW, 5000000); //modified this method so it doesn't impact rate of sending setpoint messages
 		/* 2 Hz - TF Changed from 500 */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_MANUAL_CONTROL, 500000);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_MANUAL_CONTROL, 50000000);
 		/* 2 Hz TF Changed from 500 */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_GPS_RAW_INT, 1000);
         

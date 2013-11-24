@@ -402,7 +402,7 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 						}
 					}
                     
-                    //if (local_pos_sp.z < -params.alt_max) local_pos_sp.z = -params.alt_max; //Set max alt to 4 m.
+                    if (local_pos_sp.z < -params.alt_max) local_pos_sp.z = -params.alt_max; //Limit max alt
                     
                     //appears that we can only send one named float per loop, so we alternate
                     if (counter % 2 == 0) {
@@ -667,7 +667,8 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 						float i = params.thr_min;
 
 						if (reset_int_z_manual) {
-							i = manual.throttle;
+							//i = manual.throttle;
+                            i = params.thr_hover;
 
 							if (i < params.thr_min) {
 								i = params.thr_min;

@@ -244,7 +244,8 @@ l_vehicle_attitude(const struct listener *l)
 					  att.yawspeed);
 
 		/* limit VFR message rate to 10Hz */
-		hrt_abstime t = hrt_absolute_time();
+		/*
+        hrt_abstime t = hrt_absolute_time();
 		if (t >= last_sent_vfr + 100000) {
 			last_sent_vfr = t;
 			float groundspeed = sqrtf(global_pos.vx * global_pos.vx + global_pos.vy * global_pos.vy);
@@ -252,6 +253,7 @@ l_vehicle_attitude(const struct listener *l)
 			float throttle = actuators_effective_0.control_effective[3] * (UINT16_MAX - 1);
 			mavlink_msg_vfr_hud_send(MAVLINK_COMM_0, airspeed.true_airspeed_m_s, groundspeed, heading, throttle, global_pos.alt, -global_pos.vz);
 		}
+         */
 	}
 
 	attitude_counter++;
@@ -780,7 +782,7 @@ uorb_receive_start(void)
 
 	/* --- GPS VALUE --- */
 	mavlink_subs.gps_sub = orb_subscribe(ORB_ID(vehicle_gps_position));
-	orb_set_interval(mavlink_subs.gps_sub, 400);	/* 5Hz updates */  //FIX ME BACK
+	orb_set_interval(mavlink_subs.gps_sub, 1000);	/* 5Hz updates */  //FIX ME BACK
 
 	/* --- HOME POSITION --- */
 	mavlink_subs.home_sub = orb_subscribe(ORB_ID(home_position));
@@ -816,7 +818,7 @@ uorb_receive_start(void)
 
 	/* --- ATTITUDE SETPOINT VALUE --- */
 	mavlink_subs.spa_sub = orb_subscribe(ORB_ID(vehicle_attitude_setpoint));
-	orb_set_interval(mavlink_subs.spa_sub, 200);	//Set to 50 for latency tests /* 0.5 Hz updates */
+	orb_set_interval(mavlink_subs.spa_sub, 500);	//Set to 50 for latency tests /* 0.5 Hz updates */
 
 	/* --- RATES SETPOINT VALUE --- */
 	mavlink_subs.rates_setpoint_sub = orb_subscribe(ORB_ID(vehicle_rates_setpoint));

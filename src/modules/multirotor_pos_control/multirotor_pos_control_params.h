@@ -64,6 +64,7 @@ struct multirotor_position_control_params {
 	float rc_scale_yaw;
     
     float alt_max;
+    float thr_hover;
 };
 
 struct multirotor_position_control_param_handles {
@@ -90,6 +91,7 @@ struct multirotor_position_control_param_handles {
 	param_t rc_scale_yaw;
     
     param_t alt_max;
+    param_t thr_hover;
 };
 
 /**

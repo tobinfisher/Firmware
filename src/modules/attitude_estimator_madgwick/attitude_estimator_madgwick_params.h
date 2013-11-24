@@ -42,17 +42,14 @@
 #include <systemlib/param/param.h>
 
 struct attitude_estimator_madgwick_params {
-	float r[9];
-	float q[12];
-	float roll_off;
-	float pitch_off;
-	float yaw_off;
+	float beta;
+	float zeta;
+
 };
 
 struct attitude_estimator_madgwick_param_handles {
-	param_t r0, r1, r2, r3;
-	param_t q0, q1, q2, q3, q4;
-	param_t roll_off, pitch_off, yaw_off;
+	param_t beta, zeta;
+
 };
 
 /**

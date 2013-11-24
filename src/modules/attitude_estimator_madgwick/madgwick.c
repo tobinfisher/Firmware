@@ -11,7 +11,7 @@
 #include "madgwick.h"
 
 
-#define BETA 0.035f
+#define BETA 0.055f
 #define ZETA 0.005f
 
 
@@ -46,7 +46,7 @@ void getBiases(float *data)
 	data[2] = w_bz;
 }
 
-float *AttitudeUpdate(float dt,float a_x,float a_y, float a_z,float w_x, float w_y, float w_z,float m_x, float m_y, float m_z)
+float *AttitudeUpdate(float dt,float _beta, float _zeta, float a_x,float a_y, float a_z,float w_x, float w_y, float w_z,float m_x, float m_y, float m_z)
 {
 
 	float qConj[4];
@@ -147,8 +147,8 @@ float *AttitudeUpdate(float dt,float a_x,float a_y, float a_z,float w_x, float w
     }
     else
     {
-        beta = BETA;
-        zeta = ZETA;
+        beta = _beta;
+        zeta = _zeta;
     }
     
     qDot[0] = 0.5f*qDot[0] - beta*step[0];

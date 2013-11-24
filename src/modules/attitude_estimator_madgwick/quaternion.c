@@ -67,9 +67,9 @@ void QuatAdd(float *q, float *r)
 void QuatOfEulers(float *eulers,float *result)
 {
 
-  float phi2     = eulers[1] / 2.0;
-  float theta2   = eulers[2] / 2.0;
-  float psi2     = eulers[3] / 2.0;
+  float phi2     = eulers[0] / 2.0;
+  float theta2   = eulers[1] / 2.0;
+  float psi2     = eulers[2] / 2.0;
 
   float sinphi2   = sin( phi2 );
   float cosphi2   = cos( phi2 );

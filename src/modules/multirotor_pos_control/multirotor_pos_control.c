@@ -72,6 +72,7 @@
 #include "thrust_pid.h"
 
 #define FAILSAFE_TIMEOUT 5000000 //5 seconds - Time before shutting motors off, after initiation of failsafe
+#define TAKEOFF_MAX_TILT 0.05 //Limit max tilt during auto take off
 
 
 static bool thread_should_exit = false;		/**< Deamon exit flag */
@@ -271,7 +272,6 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 	pid_init(&z_pos_pid, params.z_p, 0.0f, params.z_d, 1.0f, params.z_vel_max, PID_MODE_DERIVATIV_SET, 0.02f);
 	thrust_pid_init(&z_vel_pid, params.z_vel_p, params.z_vel_i, params.z_vel_d, -params.thr_max, -params.thr_min, PID_MODE_DERIVATIV_CALC_NO_SP, 0.02f);
     
-    static int counter = 0;
 
 	while (!thread_should_exit) {
 
@@ -344,6 +344,20 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 		was_armed = control_mode.flag_armed;
 
 		t_prev = t;
+        
+        /*static int counter = 0;
+        
+        if (counter % 10 == 0) {
+            if (control_mode.flag_control_auto_enabled) {
+                mavlink_log_info(mavlink_fd, "[MPC] auto control enabled");
+            }
+            
+            else{
+                mavlink_log_info(mavlink_fd, "[MPC] auto control NOT enabled");
+            }
+        }
+        */
+        
 
 		if (control_mode.flag_control_altitude_enabled || control_mode.flag_control_velocity_enabled || control_mode.flag_control_position_enabled) {
 			orb_copy(ORB_ID(manual_control_setpoint), manual_sub, &manual);
@@ -401,22 +415,7 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 							local_pos_sp.z = local_pos.z - z_sp_offs_max;
 						}
 					}
-                    
-                    if (local_pos_sp.z < -params.alt_max) local_pos_sp.z = -params.alt_max; //Limit max alt
-                    
-                    //appears that we can only send one named float per loop, so we alternate
-                    if (counter % 2 == 0) {
-                        alt_dbg.value = local_pos.z;
-                        orb_publish(ORB_ID(debug_key_value), pub_alt_dbg, &alt_dbg);
-                    }
-                    
-                    else {
-                        alt_sp_dbg.value = local_pos_sp.z;
-                        orb_publish(ORB_ID(debug_key_value), pub_alt_sp_dbg, &alt_sp_dbg);
-                    }
-                    
-                    counter ++;
-				}
+                }
 
 				if (control_mode.flag_control_position_enabled) {
 					if (reset_man_sp_xy) {
@@ -465,7 +464,10 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 				reset_mission_sp = true;
 
 			} else if (control_mode.flag_control_auto_enabled) {
-				/* AUTO mode, use global setpoint */
+				
+                //mavlink_log_info(mavlink_fd, "[mpc] got here");
+                
+                /* AUTO mode, use global setpoint */
 				if (control_mode.auto_state == NAVIGATION_STATE_AUTO_READY) {
 					reset_auto_sp_xy = true;
 					reset_auto_sp_z = true;
@@ -576,9 +578,9 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
                 uint32_t failsafe_time = hrt_absolute_time() - failsafe_start_time;
                 
                 //if on or near ground or past failsafe timeout, keep motors off/ turn them off
-                if (/*manual.throttle < params.thr_min ||*/ local_pos.z > - 1|| failsafe_time > FAILSAFE_TIMEOUT ) {
+                if (/*manual.throttle < params.thr_min || local_pos.z > 5||*/ failsafe_time > FAILSAFE_TIMEOUT) {
                     att_sp.thrust = 0;
-                    mavlink_log_info(mavlink_fd, "[mpc] setting throttle to 0 at t= %i", failsafe_time);
+                    //mavlink_log_info(mavlink_fd, "[mpc] t= %i, sp:%0.2f", failsafe_time, local_pos_sp.z);
                     
                     orb_publish(ORB_ID(vehicle_attitude_setpoint), att_sp_pub, &att_sp);
                 }
@@ -588,7 +590,7 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
                     // set altitude setpoint to 5m under ground,
                     //don't set it too deep to avoid unexpected landing in case of false "landed" signal
                     local_pos_sp.z = 5.0f;
-                    mavlink_log_info(mavlink_fd, "[mpc] landing, set alt: %.2f", (double) - local_pos_sp.z);
+                    mavlink_log_info(mavlink_fd, "[mpc] faislsafe landing, set alt: %.2f", (double) - local_pos_sp.z);
                 }
 					reset_man_sp_z = true;
 
@@ -616,6 +618,27 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 					reset_auto_sp_xy = false;
 				}
 			}
+            
+            if (control_mode.flag_control_altitude_enabled) {
+                
+                if (local_pos_sp.z < -params.alt_max) local_pos_sp.z = -params.alt_max; //Limit max alt
+                
+                // SEND ALT AND ALT SETPOINT OVER MAVLINK
+                static int counter = 0;
+                
+                //appears that we can only send one named float per loop, so we alternate
+                if (counter % 2 == 0) {
+                    alt_dbg.value = local_pos.z;
+                    orb_publish(ORB_ID(debug_key_value), pub_alt_dbg, &alt_dbg);
+                }
+                
+                else {
+                    alt_sp_dbg.value = local_pos_sp.z;
+                    orb_publish(ORB_ID(debug_key_value), pub_alt_sp_dbg, &alt_sp_dbg);
+                }
+                
+                counter ++;
+            }
 
 			/* publish local position setpoint */
 			orb_publish(ORB_ID(vehicle_local_position_setpoint), local_pos_sp_pub, &local_pos_sp);
@@ -712,6 +735,13 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 					if (tilt > params.tilt_max) {
 						tilt = params.tilt_max;
 					}
+                    
+                    if (control_mode.auto_state == NAVIGATION_STATE_AUTO_TAKEOFF) {
+                        
+                        if (tilt > TAKEOFF_MAX_TILT) {
+                            tilt = TAKEOFF_MAX_TILT;
+                        }
+                    }
 
 					/* convert direction to body frame */
 					thrust_xy_dir -= att.yaw;

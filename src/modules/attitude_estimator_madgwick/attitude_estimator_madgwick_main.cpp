@@ -213,11 +213,7 @@ float z_k[9];
 	/* subscribe to param changes */
 	int sub_params = orb_subscribe(ORB_ID(parameter_update));
 
-<<<<<<< HEAD
-	/* subscribe to system state*/
-=======
 	/* subscribe to control mode*/
->>>>>>> master_merge
 	int sub_control_mode = orb_subscribe(ORB_ID(vehicle_control_mode));
 
 	/* advertise attitude */
@@ -270,20 +266,7 @@ float z_k[9];
 			/* XXX this is seriously bad - should be an emergency */
             printf("[ATT_EST_MADG ERROR] RET < 0");
 		} else if (ret == 0) {
-			/* check if we're in HIL - not getting sensor data is fine then */
-			orb_copy(ORB_ID(vehicle_control_mode), sub_control_mode, &control_mode);
-<<<<<<< HEAD
-            
-            if (!control_mode.flag_system_hil_enabled) {
-				fprintf(stderr,
-                        "[att madg] WARNING: Not getting sensors - sensor app running?\n");
-=======
-
-			if (!control_mode.flag_system_hil_enabled) {
-				fprintf(stderr,
-					"[att ekf] WARNING: Not getting sensors - sensor app running?\n");
->>>>>>> master_merge
-			}
+			
 
 		} else {
 
@@ -421,12 +404,8 @@ float z_k[9];
 						continue;
 					}
 
-<<<<<<< HEAD
-					if (last_data > 0 && raw.timestamp - last_data > 12000) printf("[attitude estimator madg] sensor data missed! (%llu)\n", raw.timestamp - last_data);
-=======
 					if (last_data > 0 && raw.timestamp - last_data > 12000)
 						printf("[attitude estimator madgwick] sensor data missed! (%llu)\n", raw.timestamp - last_data);
->>>>>>> master_merge
 
 					last_data = raw.timestamp;
 

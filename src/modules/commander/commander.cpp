@@ -475,11 +475,12 @@ void handle_command(struct vehicle_status_s *status, const struct safety_s *safe
 		}
 
 	case VEHICLE_CMD_NAV_TAKEOFF: {
+        
 			if (armed->armed) {
 				transition_result_t nav_res = navigation_state_transition(status, NAVIGATION_STATE_AUTO_TAKEOFF, control_mode);
-
+                
 				if (nav_res == TRANSITION_CHANGED) {
-					mavlink_log_info(mavlink_fd, "[cmd] TAKEOFF on command");
+					//mavlink_log_info(mavlink_fd, "[cmd] TAKEOFF on command");
 				}
 
 				if (nav_res != TRANSITION_DENIED) {
@@ -1261,6 +1262,14 @@ int commander_thread_main(int argc, char *argv[])
 
 			/* handle it */
 			handle_command(&status, &safety, &control_mode, &cmd, &armed);
+            
+           if (control_mode.flag_control_auto_enabled) {
+                mavlink_log_info(mavlink_fd, "[CMD] 1 auto control enabled");
+            }
+            
+            else{
+                mavlink_log_info(mavlink_fd, "[CMD] 1 auto control NOT enabled");
+            }
 		}
 
 		/* evaluate the navigation state machine */
@@ -1271,7 +1280,18 @@ int commander_thread_main(int argc, char *argv[])
 			warnx("ERROR: nav denied: arm %d main %d nav %d", status.arming_state, status.main_state, status.navigation_state);
 			mavlink_log_critical(mavlink_fd, "#audio: ERROR: nav denied: arm %d main %d nav %d", status.arming_state, status.main_state, status.navigation_state);
 		}
+        
+        if (updated) {
+            if (control_mode.flag_control_auto_enabled) {
+                mavlink_log_info(mavlink_fd, "[CMD] 2 auto control enabled");
+            }
+            
+            else{
+                mavlink_log_info(mavlink_fd, "[CMD] 2 auto control NOT enabled");
+            }
 
+        }
+        
 		/* check which state machines for changes, clear "changed" flag */
 		bool arming_state_changed = check_arming_state_changed();
 		bool main_state_changed = check_main_state_changed();
@@ -1612,6 +1632,9 @@ check_navigation_state_machine(struct vehicle_status_s *status, struct vehicle_c
 	transition_result_t res = TRANSITION_DENIED;
 
 	if (status->main_state == MAIN_STATE_AUTO) {
+        
+        //mavlink_log_info(mavlink_fd, "[CMD] In state auto");
+        
 		if (status->arming_state == ARMING_STATE_ARMED || status->arming_state == ARMING_STATE_ARMED_ERROR) {
 			// TODO AUTO_LAND handling
 			if (status->navigation_state == NAVIGATION_STATE_AUTO_TAKEOFF) {
@@ -1669,6 +1692,7 @@ check_navigation_state_machine(struct vehicle_status_s *status, struct vehicle_c
 		}
 
 	} else {
+        
 		/* manual control modes */
 		if ((status->rc_signal_lost && status->manual_control_signal_lost && status->offboard_control_signal_lost) && (status->arming_state == ARMING_STATE_ARMED || status->arming_state == ARMING_STATE_ARMED_ERROR)) {
             

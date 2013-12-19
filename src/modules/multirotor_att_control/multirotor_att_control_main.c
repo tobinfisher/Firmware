@@ -89,9 +89,7 @@ static const float min_takeoff_throttle = 0.3f;
 static const float yaw_deadzone = 0.01f;
 static int mavlink_fd = 0;
 
-static int
-
-#define FAIL_SAFE_TILT 90 * (3.14/180)
+#define FAIL_SAFE_TILT 50 * (3.14/180)
 
 mc_thread_main(int argc, char *argv[])
 {

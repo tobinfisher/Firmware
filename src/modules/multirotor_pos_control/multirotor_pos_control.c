@@ -71,7 +71,7 @@
 #include "multirotor_pos_control_params.h"
 #include "thrust_pid.h"
 
-#define FAILSAFE_TIMEOUT 5000000 //5 seconds - Time before shutting motors off, after initiation of failsafe
+#define FAILSAFE_TIMEOUT 10000000 //10 seconds - Time before shutting motors off, after initiation of failsafe, good for abou 16 meters of descent
 #define TAKEOFF_MAX_TILT 0.05 //Limit max tilt during auto take off
 
 
@@ -679,7 +679,7 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 			
             //mavlink_log_info(mavlink_fd, "[mpc] att_sp.thrust= %.i", att_sp.thrust);
             
-            if ((control_mode.flag_control_climb_rate_enabled || control_mode.flag_control_velocity_enabled) && !failsafe_mode /*&& att_sp.thrust > params.thr_min*/) {
+            if ((control_mode.flag_control_climb_rate_enabled || control_mode.flag_control_velocity_enabled) && !(failsafe_mode && att_sp.thrust == 0) /*&& att_sp.thrust > params.thr_min*/) {
 				
                 /* run velocity controllers, calculate thrust vector with attitude-thrust compensation */
 				float thrust_sp[3] = { 0.0f, 0.0f, 0.0f };

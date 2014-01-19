@@ -64,6 +64,7 @@
 struct mavlink_subscriptions {
 	int sensor_sub;
 	int att_sub;
+    int att__s_sub;
 	int global_pos_sub;
 	int act_0_sub;
 	int act_1_sub;

@@ -283,7 +283,7 @@ int set_mavlink_interval_limit(struct mavlink_subscriptions *subs, int mavlink_m
 		/* attitude sub triggers attitude */
 		orb_set_interval(subs->att_sub, min_interval);
 		break;
-
+            
 	case MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:
 		/* actuator_outputs triggers this message */
         //min_interval = 10000000; //TF added
@@ -624,7 +624,7 @@ int mavlink_thread_main(int argc, char *argv[])
         // TF - Changed from 500
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_HIGHRES_IMU, 500000); //Set higher for calibration of sensors, also causes servo output raw messages and longer setpoint messages to be sent
 		/* 10 Hz / 100 ms ATTITUDE */
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_ATTITUDE, 300);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_ATTITUDE, 500);
 		/* 5 Hz / 200 ms - TF Changed from 200 */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_NAMED_VALUE_FLOAT, 500);
 		/* 5 Hz / 200 ms Changed from 500 */
@@ -637,7 +637,7 @@ int mavlink_thread_main(int argc, char *argv[])
 	} else {
 		/* very low baud rate, limit to 1 Hz / 1000 ms */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_RAW_IMU, 1000);
-		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_ATTITUDE, 1000);
+		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_ATTITUDE_S, 1000);
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_HIGHRES_IMU, 1000);
 		/* 1 Hz / 1000 ms */
 		set_mavlink_interval_limit(&mavlink_subs, MAVLINK_MSG_ID_NAMED_VALUE_FLOAT, 1000);
@@ -665,7 +665,9 @@ int mavlink_thread_main(int argc, char *argv[])
 			get_mavlink_mode_and_state(&mavlink_state, &mavlink_base_mode, &mavlink_custom_mode);
 
 			/* send heartbeat */
-			mavlink_msg_heartbeat_send(chan, mavlink_system.type, MAV_AUTOPILOT_PX4, mavlink_base_mode, mavlink_custom_mode, mavlink_state);
+            mavlink_msg_heartbeat_s_send(chan, mavlink_base_mode, mavlink_custom_mode);
+			//mavlink_msg_heartbeat_send(chan, mavlink_system.type, MAV_AUTOPILOT_PX4, mavlink_base_mode, mavlink_custom_mode, mavlink_state);
+            
 
 			/* switch HIL mode if required */
 			if (v_status.hil_state == HIL_STATE_ON)

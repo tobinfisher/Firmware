@@ -193,8 +193,199 @@ handle_message(mavlink_message_t *msg)
 			}
 		}
 	}
+    
+    if (msg->msgid == MAVLINK_MSG_ID_CONTROL_TILT_YAW_THRUST) {
+        
+        gcs_link = TRUE;
+        
+        mavlink_control_tilt_yaw_thrust_t man;
+        mavlink_msg_control_tilt_yaw_thrust_decode(msg, &man);
+        
+        struct manual_control_setpoint_s mc;
+        static orb_advert_t mc_pub = 0;
+        
+        int manual_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
+        
+        // get a copy first, to prevent altering values that are not sent by the mavlink command
+        orb_copy(ORB_ID(manual_control_setpoint), manual_sub, &mc);
+        
+        //for these switches, NAN means unset
+        mc.mode_switch = NAN;
+        mc.return_switch = NAN;
+        mc.assisted_switch = NAN;
+        mc.mission_switch = NAN;
+        
+        mc.timestamp = hrt_absolute_time();
+        mc.roll = (float)man.x / 323.6f; //Max value of 127 will be Pi/8 radians
+        mc.pitch = (float)man.y / 323.6f; //Max value of 127 will be Pi/8 radians
+        mc.yaw = ((float)man.r / 127.0f) * 3.14;
+        mc.throttle = (float)man.z / 256.0f;
+        
+        if (mc_pub == 0) {
+            mc_pub = orb_advertise(ORB_ID(manual_control_setpoint), &mc);
+            
+        } else {
+            orb_publish(ORB_ID(manual_control_setpoint), mc_pub, &mc);
+        }
+        
+        /*message_counter ++;
+        
+        if (message_counter % 20 == 0) {
+            
+            mavlink_message_t ack_msg;
+            mavlink_command_ack_t ack;
+            ack.command = MAVLINK_MSG_ID_CONTROL_TILT_YAW_THRUST;
+            ack.result = MAV_RESULT_ACCEPTED;
+            mavlink_msg_command_ack_encode(mavlink_system.sysid, mavlink_system.compid, &ack_msg, &ack);
+            mavlink_missionlib_send_message(&ack_msg);
+        }*/
+    }
+    
+    if (msg->msgid == MAVLINK_MSG_ID_CONTROL_TILT_THRUST) {
+        
+        gcs_link = TRUE;
+        
+        mavlink_control_tilt_thrust_t man;
+        mavlink_msg_control_tilt_thrust_decode(msg, &man);
+        
+        struct manual_control_setpoint_s mc;
+        static orb_advert_t mc_pub = 0;
+        
+        int manual_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
+        
+        // get a copy first, to prevent altering values that are not sent by the mavlink command
+        orb_copy(ORB_ID(manual_control_setpoint), manual_sub, &mc);
+        
+        //for these switches, NAN means unset
+        mc.mode_switch = NAN;
+        mc.return_switch = NAN;
+        mc.assisted_switch = NAN;
+        mc.mission_switch = NAN;
+        
+        mc.timestamp = hrt_absolute_time();
+        mc.roll = (float)man.x / 323.6f; //Max value of 127 will be Pi/8 radians
+        mc.pitch = (float)man.y / 323.6f; //Max value of 127 will be Pi/8 radians
+        //mc.yaw = ((float)man.r / 127.0f) * 3.14;
+        mc.throttle = (float)man.z / 256.0f;
+        
+        if (mc_pub == 0) {
+            mc_pub = orb_advertise(ORB_ID(manual_control_setpoint), &mc);
+            
+        } else {
+            orb_publish(ORB_ID(manual_control_setpoint), mc_pub, &mc);
+        }
+        
+        message_counter ++;
+         
+         if (message_counter % 20 == 0) {
+         
+         mavlink_message_t ack_msg;
+         mavlink_command_ack_t ack;
+         ack.command = MAVLINK_MSG_ID_CONTROL_TILT_THRUST;
+         ack.result = mc.throttle * 256; // MAV_RESULT_ACCEPTED;
+         mavlink_msg_command_ack_encode(mavlink_system.sysid, mavlink_system.compid, &ack_msg, &ack);
+         mavlink_missionlib_send_message(&ack_msg);
+         }
+    }
+    
+    if (msg->msgid == MAVLINK_MSG_ID_CONTROL_TILT_YAW) {
+        
+        gcs_link = TRUE;
+        
+        mavlink_control_tilt_yaw_t man;
+        mavlink_msg_control_tilt_yaw_decode(msg, &man);
+        
+        struct manual_control_setpoint_s mc;
+        static orb_advert_t mc_pub = 0;
+        
+        int manual_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
+        
+        // get a copy first, to prevent altering values that are not sent by the mavlink command
+        orb_copy(ORB_ID(manual_control_setpoint), manual_sub, &mc);
+        
+        //for these switches, NAN means unset
+        mc.mode_switch = NAN;
+        mc.return_switch = NAN;
+        mc.assisted_switch = NAN;
+        mc.mission_switch = NAN;
+        
+        mc.timestamp = hrt_absolute_time();
+        mc.roll = (float)man.x / 323.6f; //Max value of 127 will be Pi/8 radians
+        mc.pitch = (float)man.y / 323.6f; //Max value of 127 will be Pi/8 radians
+        mc.yaw = ((float)man.r / 127.0f) * 3.14;
+        //mc.throttle = (float)man.z / 256.0f;
+        
+        if (mc_pub == 0) {
+            mc_pub = orb_advertise(ORB_ID(manual_control_setpoint), &mc);
+            
+        } else {
+            orb_publish(ORB_ID(manual_control_setpoint), mc_pub, &mc);
+        }
+        
+        message_counter ++;
+        
+        if (message_counter % 20 == 0) {
+            
+            mavlink_message_t ack_msg;
+            mavlink_command_ack_t ack;
+            ack.command = MAVLINK_MSG_ID_CONTROL_TILT_YAW;
+            ack.result = MAV_RESULT_ACCEPTED;
+            mavlink_msg_command_ack_encode(mavlink_system.sysid, mavlink_system.compid, &ack_msg, &ack);
+            mavlink_missionlib_send_message(&ack_msg);
+        }
+    }
+
+    
+    if (msg->msgid == MAVLINK_MSG_ID_CONTROL_TILT) {
+        
+        gcs_link = TRUE;
+        
+        mavlink_control_tilt_t man;
+        mavlink_msg_control_tilt_decode(msg, &man);
+        
+        struct manual_control_setpoint_s mc;
+        static orb_advert_t mc_pub = 0;
+        
+        int manual_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
+        
+        // get a copy first, to prevent altering values that are not sent by the mavlink command
+        orb_copy(ORB_ID(manual_control_setpoint), manual_sub, &mc);
+        
+        //for these switches, NAN means unset
+        mc.mode_switch = NAN;
+        mc.return_switch = NAN;
+        mc.assisted_switch = NAN;
+        mc.mission_switch = NAN;
+        
+        mc.timestamp = hrt_absolute_time();
+        mc.roll = (float)man.x / 323.6f; //Max value of 127 will be Pi/8 radians
+        mc.pitch = (float)man.y / 323.6f; //Max value of 127 will be Pi/8 radians
+        //mc.yaw = ((float)man.r / 127.0f) * 3.14;
+        //mc.throttle = (float)man.z / 256.0f;
+        
+        if (mc_pub == 0) {
+            mc_pub = orb_advertise(ORB_ID(manual_control_setpoint), &mc);
+            
+        } else {
+            orb_publish(ORB_ID(manual_control_setpoint), mc_pub, &mc);
+        }
+        
   
-    if (msg->msgid == MAVLINK_MSG_ID_MANUAL_CONTROL) {
+        message_counter ++;
+        
+        if (message_counter % 20 == 0) {
+            
+            mavlink_message_t ack_msg;
+            mavlink_command_ack_t ack;
+            ack.command = MAVLINK_MSG_ID_CONTROL_TILT;
+            ack.result = mc.throttle * 256; // MAV_RESULT_ACCEPTED;
+            mavlink_msg_command_ack_encode(mavlink_system.sysid, mavlink_system.compid, &ack_msg, &ack);
+            mavlink_missionlib_send_message(&ack_msg);
+        }
+    }
+
+  
+    else if (msg->msgid == MAVLINK_MSG_ID_MANUAL_CONTROL) {
         
         gcs_link = TRUE;
         
@@ -242,7 +433,7 @@ handle_message(mavlink_message_t *msg)
     }
 
 
-	if (msg->msgid == MAVLINK_MSG_ID_OPTICAL_FLOW) {
+	else if (msg->msgid == MAVLINK_MSG_ID_OPTICAL_FLOW) {
 		mavlink_optical_flow_t flow;
 		mavlink_msg_optical_flow_decode(msg, &flow);
 
@@ -267,7 +458,7 @@ handle_message(mavlink_message_t *msg)
 		}
 	}
 
-    if (msg->msgid == MAVLINK_MSG_ID_SET_MODE) {
+    else if (msg->msgid == MAVLINK_MSG_ID_SET_MODE) {
         
 		/* Set mode on request */
 		mavlink_set_mode_t new_mode;
@@ -300,7 +491,7 @@ handle_message(mavlink_message_t *msg)
 	}
 
 	/* Handle Vicon position estimates */
-	if (msg->msgid == MAVLINK_MSG_ID_VICON_POSITION_ESTIMATE) {
+	else if (msg->msgid == MAVLINK_MSG_ID_VICON_POSITION_ESTIMATE) {
 		mavlink_vicon_position_estimate_t pos;
 		mavlink_msg_vicon_position_estimate_decode(msg, &pos);
 
@@ -324,7 +515,7 @@ handle_message(mavlink_message_t *msg)
 
 	/* Handle quadrotor motor setpoints */
 
-	if (msg->msgid == MAVLINK_MSG_ID_SET_QUAD_SWARM_ROLL_PITCH_YAW_THRUST) {
+	else if (msg->msgid == MAVLINK_MSG_ID_SET_QUAD_SWARM_ROLL_PITCH_YAW_THRUST) {
 		mavlink_set_quad_swarm_roll_pitch_yaw_thrust_t quad_motors_setpoint;
 		mavlink_msg_set_quad_swarm_roll_pitch_yaw_thrust_decode(msg, &quad_motors_setpoint);
 
@@ -434,7 +625,7 @@ handle_message(mavlink_message_t *msg)
 	 * COMMAND_LONG message or a SET_MODE message
 	 */
 
-	if (mavlink_hil_enabled) {
+	else if (mavlink_hil_enabled) {
 
 		uint64_t timestamp = hrt_absolute_time();
 

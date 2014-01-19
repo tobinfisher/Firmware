@@ -129,31 +129,31 @@ static void	l_airspeed(const struct listener *l);
 static void	l_nav_cap(const struct listener *l);
 
 static const struct listener listeners[] = {
-	{l_sensor_combined,		&mavlink_subs.sensor_sub,	0},
+	//{l_sensor_combined,		&mavlink_subs.sensor_sub,	0},
 	{l_vehicle_attitude,		&mavlink_subs.att_sub,		0},
 	{l_vehicle_gps_position,	&mavlink_subs.gps_sub,		0},
 	{l_vehicle_status,		&status_sub,			0},
-	{l_rc_channels,			&rc_sub,			0},
-	{l_input_rc,			&mavlink_subs.input_rc_sub,	0},
-	{l_global_position,		&mavlink_subs.global_pos_sub,	0},
-	{l_local_position,		&mavlink_subs.local_pos_sub,	0},
-	{l_global_position_setpoint,	&mavlink_subs.spg_sub,		0},
-	{l_local_position_setpoint,	&mavlink_subs.spl_sub,		0},
+	//{l_rc_channels,			&rc_sub,			0},
+	//{l_input_rc,			&mavlink_subs.input_rc_sub,	0},
+	//{l_global_position,		&mavlink_subs.global_pos_sub,	0},
+	//{l_local_position,		&mavlink_subs.local_pos_sub,	0},
+	//{l_global_position_setpoint,	&mavlink_subs.spg_sub,		0},
+	//{l_local_position_setpoint,	&mavlink_subs.spl_sub,		0},
 	{l_attitude_setpoint,		&mavlink_subs.spa_sub,		0},
-	{l_actuator_outputs,		&mavlink_subs.act_0_sub,	0},
-	{l_actuator_outputs,		&mavlink_subs.act_1_sub,	1},
-	{l_actuator_outputs,		&mavlink_subs.act_2_sub,	2},
-	{l_actuator_outputs,		&mavlink_subs.act_3_sub,	3},
-	{l_actuator_armed,		&mavlink_subs.armed_sub,	0},
-	{l_manual_control_setpoint,	&mavlink_subs.man_control_sp_sub, 0},
-	{l_vehicle_attitude_controls,	&mavlink_subs.actuators_sub,	0},
-	{l_vehicle_attitude_controls_effective,	&mavlink_subs.actuators_effective_sub,	0},
+	//{l_actuator_outputs,		&mavlink_subs.act_0_sub,	0},
+	//{l_actuator_outputs,		&mavlink_subs.act_1_sub,	1},
+	//{l_actuator_outputs,		&mavlink_subs.act_2_sub,	2},
+	//{l_actuator_outputs,		&mavlink_subs.act_3_sub,	3},
+	//{l_actuator_armed,		&mavlink_subs.armed_sub,	0},
+	//{l_manual_control_setpoint,	&mavlink_subs.man_control_sp_sub, 0},
+	//{l_vehicle_attitude_controls,	&mavlink_subs.actuators_sub,	0},
+	//{l_vehicle_attitude_controls_effective,	&mavlink_subs.actuators_effective_sub,	0},
 	{l_debug_key_value,		&mavlink_subs.debug_key_value,	0},
-	{l_optical_flow,		&mavlink_subs.optical_flow,	0},
-	{l_vehicle_rates_setpoint,	&mavlink_subs.rates_setpoint_sub,	0},
-	{l_home,			&mavlink_subs.home_sub,		0},
-	{l_airspeed,			&mavlink_subs.airspeed_sub,		0},
-	{l_nav_cap,			&mavlink_subs.navigation_capabilities_sub,		0},
+	//{l_optical_flow,		&mavlink_subs.optical_flow,	0},
+	//{l_vehicle_rates_setpoint,	&mavlink_subs.rates_setpoint_sub,	0},
+	//{l_home,			&mavlink_subs.home_sub,		0},
+	//{l_airspeed,			&mavlink_subs.airspeed_sub,		0},
+	//{l_nav_cap,			&mavlink_subs.navigation_capabilities_sub,		0},
 };
 
 static const unsigned n_listeners = sizeof(listeners) / sizeof(listeners[0]);
@@ -234,14 +234,16 @@ l_vehicle_attitude(const struct listener *l)
 
 	if (gcs_link) {
 		/* send sensor values */
-		mavlink_msg_attitude_send(MAVLINK_COMM_0,
-					  last_sensor_timestamp / 1000,
-					  att.roll,
-					  att.pitch,
-					  att.yaw,
-					  att.rollspeed,
-					  att.pitchspeed,
-					  att.yawspeed);
+        
+        mavlink_msg_attitude_s_send(MAVLINK_COMM_0,att.roll,att.pitch,att.yaw);
+  
+    /*mavlink_msg_attitude_send(MAVLINK_COMM_0,
+                                  last_sensor_timestamp / 1000,
+                                  att.roll,
+                                  att.pitch,
+                                  att.yaw,
+                                  att.rollspeed,
+                                  att.pitchspeed, att.yawspeed);*/
 
 		/* limit VFR message rate to 10Hz */
 		/*
@@ -258,6 +260,7 @@ l_vehicle_attitude(const struct listener *l)
 
 	attitude_counter++;
 }
+
 
 void
 l_vehicle_gps_position(const struct listener *l)
@@ -277,7 +280,7 @@ l_vehicle_gps_position(const struct listener *l)
 
 
 	/* GPS position */
-	mavlink_msg_gps_raw_int_send(MAVLINK_COMM_0,
+    /*mavlink_msg_gps_raw_int_send(MAVLINK_COMM_0,
 				     gps.timestamp_position,
 				     gps.fix_type,
 				     gps.lat,
@@ -287,7 +290,10 @@ l_vehicle_gps_position(const struct listener *l)
 				     cm_uint16_from_m_float(gps.epv_m),
 				     gps.vel_m_s * 1e2f, // from m/s to cm/s
 				     cog_deg * 1e2f, // from deg to deg * 100
-				     gps.satellites_visible);
+				     gps.satellites_visible);*/
+    
+    mavlink_msg_gps_raw_int_s_send(MAVLINK_COMM_0,gps.lat,gps.lon,cm_uint16_from_m_float(gps.eph_m));
+    
 
 	/* update SAT info every 10 seconds */
     /*
@@ -327,12 +333,14 @@ l_vehicle_status(const struct listener *l)
 	get_mavlink_mode_and_state(&mavlink_state, &mavlink_base_mode, &mavlink_custom_mode);
 
 	/* send heartbeat */
-	mavlink_msg_heartbeat_send(chan,
+	/*mavlink_msg_heartbeat_send(chan,
 				   mavlink_system.type,
 				   MAV_AUTOPILOT_PX4,
 				   mavlink_base_mode,
 				   mavlink_custom_mode,
-				   mavlink_state);
+				   mavlink_state);*/
+    
+    mavlink_msg_heartbeat_s_send(chan, mavlink_base_mode, mavlink_custom_mode);
 }
 
 void
@@ -459,13 +467,21 @@ l_attitude_setpoint(const struct listener *l)
 	/* copy local position data into local buffer */
 	orb_copy(ORB_ID(vehicle_attitude_setpoint), mavlink_subs.spa_sub, &att_sp);
 
-	if (gcs_link)
+	if (gcs_link){
 		mavlink_msg_roll_pitch_yaw_thrust_setpoint_send(MAVLINK_COMM_0,
 				att_sp.timestamp / 1000,
 				att_sp.roll_body,
 				att_sp.pitch_body,
 				att_sp.yaw_body,
 				att_sp.thrust);
+    
+    /*int8_t roll = att_sp.roll_body * 323.6;
+    int8_t pitch = att_sp.pitch_body * 323.6;
+    uint8_t thrust = att_sp.thrust * 256.0;
+    
+    mavlink_msg_set_roll_pitch_yaw_thrust_s_send(MAVLINK_COMM_0, roll, pitch, att_sp.yaw_body, thrust);*/
+    //mavlink_msg_set_roll_pitch_yaw_thrust_s_send(MAVLINK_COMM_0, att_sp.roll_body, att_sp.pitch_body, att_sp.yaw_body, att_sp.thrust);
+    }
 }
 
 void
@@ -671,10 +687,11 @@ l_debug_key_value(const struct listener *l)
 	/* Enforce null termination */
 	debug.key[sizeof(debug.key) - 1] = '\0';
 
-	mavlink_msg_named_value_float_send(MAVLINK_COMM_0,
+	/*mavlink_msg_named_value_float_send(MAVLINK_COMM_0,
 					   last_sensor_timestamp / 1000,
 					   debug.key,
-					   debug.value);
+					   debug.value);*/
+    mavlink_msg_named_value_float_s_send(MAVLINK_COMM_0,debug.key,debug.value);
 }
 
 void
@@ -778,7 +795,7 @@ uorb_receive_start(void)
 	/* --- ATTITUDE VALUE --- */
 	mavlink_subs.att_sub = orb_subscribe(ORB_ID(vehicle_attitude));
 	/* rate limit set externally based on interface speed, set a basic default here */
-	orb_set_interval(mavlink_subs.att_sub, 200); /* 5Hz updates */
+	orb_set_interval(mavlink_subs.att_sub, 2000); /* 5Hz updates */
 
 	/* --- GPS VALUE --- */
 	mavlink_subs.gps_sub = orb_subscribe(ORB_ID(vehicle_gps_position));
@@ -818,7 +835,7 @@ uorb_receive_start(void)
 
 	/* --- ATTITUDE SETPOINT VALUE --- */
 	mavlink_subs.spa_sub = orb_subscribe(ORB_ID(vehicle_attitude_setpoint));
-	orb_set_interval(mavlink_subs.spa_sub, 500);	//Set to 50 for latency tests /* 0.5 Hz updates */
+	orb_set_interval(mavlink_subs.spa_sub, 500);	//Set to 100 for latency tests /* 0.5 Hz updates */
 
 	/* --- RATES SETPOINT VALUE --- */
 	mavlink_subs.rates_setpoint_sub = orb_subscribe(ORB_ID(vehicle_rates_setpoint));

@@ -219,10 +219,10 @@ static int multirotor_pos_control_thread_main(int argc, char *argv[])
 	orb_advert_t att_sp_pub = orb_advertise(ORB_ID(vehicle_attitude_setpoint), &att_sp);
     
     //Debugging alt hold
-    struct debug_key_value_s alt_sp_dbg = { .key = "alt_sp", .value = 0.0f };;
+    struct debug_key_value_s alt_sp_dbg = { .key = "alsp", .value = 0.0f };;
     orb_advert_t pub_alt_sp_dbg = orb_advertise(ORB_ID(debug_key_value), &alt_sp_dbg);
     
-    struct debug_key_value_s alt_dbg = { .key = "alt_est", .value = 0.0f };
+    struct debug_key_value_s alt_dbg = { .key = "ales", .value = 0.0f };
     orb_advert_t pub_alt_dbg = orb_advertise(ORB_ID(debug_key_value), &alt_dbg);
     
 

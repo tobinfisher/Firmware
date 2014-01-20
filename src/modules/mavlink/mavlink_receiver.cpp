@@ -139,6 +139,8 @@ static int32_t lat0 = 0;
 static int32_t lon0 = 0;
 static double alt0 = 0;
 
+struct manual_control_setpoint_s mc;
+
 static void
 handle_message(mavlink_message_t *msg)
 {
@@ -201,13 +203,15 @@ handle_message(mavlink_message_t *msg)
         mavlink_control_tilt_yaw_thrust_t man;
         mavlink_msg_control_tilt_yaw_thrust_decode(msg, &man);
         
-        struct manual_control_setpoint_s mc;
-        static orb_advert_t mc_pub = 0;
+        //struct manual_control_setpoint_s mc;
+        static orb_advert_t mc_pub1 = 0;
         
-        int manual_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
+        //int manual_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
         
         // get a copy first, to prevent altering values that are not sent by the mavlink command
-        orb_copy(ORB_ID(manual_control_setpoint), manual_sub, &mc);
+        //orb_copy(ORB_ID(manual_control_setpoint), manual_sub, &mc);
+        
+       // printf("Existing thrust sp = %0.2f", mc.throttle);
         
         //for these switches, NAN means unset
         mc.mode_switch = NAN;
@@ -221,12 +225,15 @@ handle_message(mavlink_message_t *msg)
         mc.yaw = ((float)man.r / 127.0f) * 3.14;
         mc.throttle = (float)man.z / 256.0f;
         
-        if (mc_pub == 0) {
-            mc_pub = orb_advertise(ORB_ID(manual_control_setpoint), &mc);
+        if (mc_pub1 == 0) {
+            mc_pub1 = orb_advertise(ORB_ID(manual_control_setpoint), &mc);
             
         } else {
-            orb_publish(ORB_ID(manual_control_setpoint), mc_pub, &mc);
+            orb_publish(ORB_ID(manual_control_setpoint), mc_pub1, &mc);
+           // printf("Published tilt yaw thrust\n");
         }
+        
+        //printf("Finishing tilt yaw thrust. Thrust = %0.2f\n", mc.throttle);
         
         /*message_counter ++;
         
@@ -248,13 +255,13 @@ handle_message(mavlink_message_t *msg)
         mavlink_control_tilt_thrust_t man;
         mavlink_msg_control_tilt_thrust_decode(msg, &man);
         
-        struct manual_control_setpoint_s mc;
+        //struct manual_control_setpoint_s mc;
         static orb_advert_t mc_pub = 0;
         
-        int manual_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
+        //int manual_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
         
         // get a copy first, to prevent altering values that are not sent by the mavlink command
-        orb_copy(ORB_ID(manual_control_setpoint), manual_sub, &mc);
+        //orb_copy(ORB_ID(manual_control_setpoint), manual_sub, &mc);
         
         //for these switches, NAN means unset
         mc.mode_switch = NAN;
@@ -273,7 +280,10 @@ handle_message(mavlink_message_t *msg)
             
         } else {
             orb_publish(ORB_ID(manual_control_setpoint), mc_pub, &mc);
+            //printf("Published tilt thrust\n");
         }
+        
+        //printf("Got a tilt yaw thrust. Thrust = %0.2f\n", mc.throttle);
         
         message_counter ++;
          
@@ -290,18 +300,20 @@ handle_message(mavlink_message_t *msg)
     
     if (msg->msgid == MAVLINK_MSG_ID_CONTROL_TILT_YAW) {
         
+        printf("Got a tilt yaw\n");
+        
         gcs_link = TRUE;
         
         mavlink_control_tilt_yaw_t man;
         mavlink_msg_control_tilt_yaw_decode(msg, &man);
         
-        struct manual_control_setpoint_s mc;
+        //struct manual_control_setpoint_s mc;
         static orb_advert_t mc_pub = 0;
         
-        int manual_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
+        //int manual_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
         
         // get a copy first, to prevent altering values that are not sent by the mavlink command
-        orb_copy(ORB_ID(manual_control_setpoint), manual_sub, &mc);
+        //orb_copy(ORB_ID(manual_control_setpoint), manual_sub, &mc);
         
         //for these switches, NAN means unset
         mc.mode_switch = NAN;
@@ -338,18 +350,20 @@ handle_message(mavlink_message_t *msg)
     
     if (msg->msgid == MAVLINK_MSG_ID_CONTROL_TILT) {
         
+        printf("Got a tilt\n");
+        
         gcs_link = TRUE;
         
         mavlink_control_tilt_t man;
         mavlink_msg_control_tilt_decode(msg, &man);
         
-        struct manual_control_setpoint_s mc;
+        //struct manual_control_setpoint_s mc;
         static orb_advert_t mc_pub = 0;
         
-        int manual_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
+        //int manual_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
         
         // get a copy first, to prevent altering values that are not sent by the mavlink command
-        orb_copy(ORB_ID(manual_control_setpoint), manual_sub, &mc);
+        //orb_copy(ORB_ID(manual_control_setpoint), manual_sub, &mc);
         
         //for these switches, NAN means unset
         mc.mode_switch = NAN;
@@ -1086,8 +1100,23 @@ receive_thread(void *arg)
 	fds[0].events = POLLIN;
 
 	ssize_t nread = 0;
+    
+    //memset(&mc, 0, sizeof(mc));
+    
+    //Subscribe to getting manual control setpoints
+    int manual_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
 
 	while (!thread_should_exit) {
+        
+        bool setpoint_updated;
+		orb_check(manual_sub, &setpoint_updated);
+        
+		if (setpoint_updated) {
+            orb_copy(ORB_ID(manual_control_setpoint), manual_sub, &mc);
+            printf("new mc sp throttle = %0.2f\n", mc.throttle);
+        }
+        
+        
 		if (poll(fds, 1, timeout) > 0) {
 			if (nread < sizeof(buf)) {
 				/* to avoid reading very small chunks wait for data before reading */

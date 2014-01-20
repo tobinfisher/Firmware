@@ -219,7 +219,6 @@
 		349E7474187E189E0004BF94 /* mavlink_msg_log_request_end.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mavlink_msg_log_request_end.h; sourceTree = "<group>"; };
 		349E7475187E189E0004BF94 /* mavlink_msg_log_request_list.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mavlink_msg_log_request_list.h; sourceTree = "<group>"; };
 		349E7476187E189E0004BF94 /* mavlink_msg_manual_control.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mavlink_msg_manual_control.h; sourceTree = "<group>"; };
-		349E7477187E189E0004BF94 /* mavlink_msg_manual_control_s.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mavlink_msg_manual_control_s.h; sourceTree = "<group>"; };
 		349E7478187E189E0004BF94 /* mavlink_msg_manual_setpoint.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mavlink_msg_manual_setpoint.h; sourceTree = "<group>"; };
 		349E7479187E189E0004BF94 /* mavlink_msg_memory_vect.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mavlink_msg_memory_vect.h; sourceTree = "<group>"; };
 		349E747A187E189E0004BF94 /* mavlink_msg_mission_ack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mavlink_msg_mission_ack.h; sourceTree = "<group>"; };
@@ -994,7 +993,6 @@
 				349E7474187E189E0004BF94 /* mavlink_msg_log_request_end.h */,
 				349E7475187E189E0004BF94 /* mavlink_msg_log_request_list.h */,
 				349E7476187E189E0004BF94 /* mavlink_msg_manual_control.h */,
-				349E7477187E189E0004BF94 /* mavlink_msg_manual_control_s.h */,
 				349E7478187E189E0004BF94 /* mavlink_msg_manual_setpoint.h */,
 				349E7479187E189E0004BF94 /* mavlink_msg_memory_vect.h */,
 				349E747A187E189E0004BF94 /* mavlink_msg_mission_ack.h */,
